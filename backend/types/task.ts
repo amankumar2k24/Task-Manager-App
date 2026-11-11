@@ -20,6 +20,11 @@ export interface TaskUpdateInput {
     status?: TaskStatus;
 }
 
+export interface TaskListQuery {
+    search?: string;
+    weekStart?: string;
+}
+
 export interface StatusInput {
     status: TaskStatus;
 }

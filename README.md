@@ -40,11 +40,16 @@ Task-Manager-App
 │   └── package.json
 └── backend/                Express + MongoDB API (mirrors K-and-A-Jewellery-Bills/backend)
     ├── api/index.ts        Vercel serverless entry - mounts the Express app
-    ├── controller/task.ts  getTasks, getWeekSummary, create/update/delete/toggle
+    ├── controller/task.ts  Thin HTTP layer - calls the service, sends responses
+    ├── service/taskService.ts  Business logic + database access (CRUD, summary, search)
     ├── middleware/validate.ts
     ├── model/task.ts       TaskAttrs interface, Mongoose model
     ├── routes/taskRoutes.ts
-    ├── types/task.ts       TaskInput, TaskUpdateInput, StatusInput, WeekSummaryResponse
+    ├── types/task.ts       TaskInput, TaskUpdateInput, StatusInput, TaskListQuery, WeekSummaryResponse
+    ├── utils/
+    │   ├── responseMessage.ts  Every API message string in one place
+    │   ├── appError.ts        AppError (status code + message) thrown by services
+    │   └── apiResponse.ts     Maps a thrown error to its HTTP response
     ├── validation/taskValidation.ts
     ├── index.ts            Express app, /api/tasks, GET /health
     ├── seed.ts             Inserts the 4 Figma demo tasks when the DB is empty
