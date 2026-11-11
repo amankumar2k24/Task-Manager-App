@@ -18,7 +18,9 @@ export const weekDays = (weekStart) => Array.from({ length: 7 }, (_, i) => addDa
 
 export const weekStartISO = (date) => {
     const monday = startOfWeek(date);
-    return monday.toISOString().slice(0, 10);
+    const month = `${monday.getMonth() + 1}`.padStart(2, "0");
+    const day = `${monday.getDate()}`.padStart(2, "0");
+    return `${monday.getFullYear()}-${month}-${day}`;
 };
 
 export const isSameDay = (a, b) => startOfDay(a).getTime() === startOfDay(b).getTime();
@@ -43,7 +45,7 @@ export const groupTasksByWeek = (tasks) => {
     const groups = new Map();
     tasks.forEach((task) => {
         const monday = startOfWeek(new Date(task.dateTime));
-        const key = monday.toISOString();
+        const key = weekStartISO(monday);
         if (!groups.has(key)) groups.set(key, { weekStart: monday, tasks: [] });
         groups.get(key).tasks.push(task);
     });

@@ -14,7 +14,8 @@ const weekRange = (weekStart) => {
 
 const searchFilter = (search) => {
     if (!search) return {};
-    const pattern = new RegExp(search.trim(), "i");
+    const escaped = search.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pattern = new RegExp(escaped, "i");
     return { $or: [{ title: pattern }, { description: pattern }] };
 };
 
