@@ -1,0 +1,30 @@
+module.exports = {
+  content: ["./pages/**/*.{js,jsx}", "./src/**/*.{js,jsx}"],
+  theme: {
+    extend: {
+      colors: {
+        primary: "#4566EC",
+        primaryDark: "#3A56D6",
+        primaryLight: "#EFF2FF",
+        pendingBg: "#FFE6E7",
+        progressFill: "#253C98",
+        danger: "#F04438",
+        ink: "#090E23",
+        muted: "#667085",
+        line: "#EAEAEA",
+        searchBorder: "#E6E6E6",
+        track: "#DADAFF",
+        homeBg: "#FDFDFF",
+      },
+      fontFamily: {
+        sans: ["system-ui", "-apple-system", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
+      },
+      boxShadow: {
+        fab: "0 8px 20px rgba(69,102,236,0.45)",
+        card: "0 1px 2px rgba(16,24,40,0.05)",
+        sheet: "0 -8px 30px rgba(16,24,40,0.12)",
+      },
+    },
+  },
+  plugins: [],
+};
