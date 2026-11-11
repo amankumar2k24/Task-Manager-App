@@ -23,46 +23,45 @@ const ChevronIcon = ({ open }: ChevronIconProps) => (
     </svg>
 );
 
+interface TaskRowActions {
+    onView: () => void;
+    onEdit: () => void;
+    onDelete: () => void;
+    onToggle: () => void;
+}
+
 interface WeekCardProps {
     weekStart: Date;
     tasks: Task[];
     defaultExpanded?: boolean;
-    onToggle: (task: Task) => void;
-    onEdit: (task: Task) => void;
-    onDelete: (id: string) => void;
+    rowActions: (task: Task) => TaskRowActions;
 }
 
-export default function WeekCard({ weekStart, tasks, defaultExpanded, onToggle, onEdit, onDelete }: WeekCardProps) {
+export default function WeekCard({ weekStart, tasks, defaultExpanded, rowActions }: WeekCardProps) {
     const [expanded, setExpanded] = useState(!!defaultExpanded);
     const { open, completed } = countByStatus(tasks);
 
     return (
-        <div className="overflow-hidden rounded-2xl border border-line bg-white shadow-card">
-            <button onClick={() => setExpanded(!expanded)} className="flex w-full items-center gap-3 px-4 py-4 text-left">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primaryLight text-[13px] font-bold text-primary">
-                    {weekStart.getDate()}
+        <div className="overflow-hidden border border-line bg-homeBg">
+            <button onClick={() => setExpanded(!expanded)} aria-expanded={expanded} className="flex w-full items-center gap-3 px-4 py-4 text-left">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center bg-completeTile text-[12px] font-semibold leading-[18px] text-progressFill">
+                    {String(weekStart.getDate()).padStart(2, "0")}
                 </span>
                 <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[15px] font-semibold text-ink">{weekLabel(weekStart)}</span>
-                    <span className="mt-0.5 block text-[12px] text-muted">
+                    <span className="block truncate text-[14px] font-medium leading-[21px] text-ink">{weekLabel(weekStart)}</span>
+                    <span className="block text-[10px] font-normal leading-[15px] text-weekText">
                         {open} open · {completed} completed
                     </span>
                 </span>
                 <ChevronIcon open={expanded} />
             </button>
             {expanded && (
-                <div className="border-t border-line px-4">
+                <div className="border-t border-line px-4 pb-2">
                     {tasks
                         .slice()
                         .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
                         .map((task) => (
-                            <TaskRow
-                                key={task.id}
-                                task={task}
-                                onToggle={() => onToggle(task)}
-                                onEdit={() => onEdit(task)}
-                                onDelete={() => onDelete(task.id)}
-                            />
+                            <TaskRow key={task.id} task={task} {...rowActions(task)} />
                         ))}
                 </div>
             )}

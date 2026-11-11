@@ -7,19 +7,18 @@ import WeekStrip from "../src/Component/WeekStrip";
 import SummaryCard from "../src/Component/SummaryCard";
 import WeeklyProgress from "../src/Component/WeeklyProgress";
 import TaskRow from "../src/Component/TaskRow";
-import TaskSheet from "../src/Component/TaskSheet";
 import EmptyState from "../src/Component/EmptyState";
 import { useTasks } from "../src/hooks/useTasks";
+import { useTaskSheets } from "../src/hooks/useTaskSheets";
 import { useWeek } from "../src/hooks/useWeek";
-import { isSameDay, weekStartISO } from "../src/lib/week";
+import { countByStatus, isInWeek, isSameDay, weekStartParam } from "../src/lib/week";
 import { formatDayHeading } from "../src/utils/format";
 import labels from "../src/labels/labels";
-import type { Task, TaskInput } from "../src/types/task";
 
 const ONBOARDED_KEY = "todo-onboarded";
 
 const PlusIcon = () => (
-    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round">
+    <svg width="33" height="33" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
         <path d="M12 5v14M5 12h14" />
     </svg>
 );
@@ -27,41 +26,25 @@ const PlusIcon = () => (
 export default function Home() {
     const router = useRouter();
     const [onboarded, setOnboarded] = useState<boolean | null>(null);
-    const [sheetOpen, setSheetOpen] = useState(false);
-    const [editingTask, setEditingTask] = useState<Task | null>(null);
     const { weekStart, days, selectedDay, selectDay } = useWeek();
-    const { items, summary, loadTasks, loadWeekSummary, addTask, editTask, removeTask, toggleTask } = useTasks();
+    const { items, status, loadTasks } = useTasks();
+    const { openCreate, rowActions, sheets } = useTaskSheets();
 
     useEffect(() => {
         setOnboarded(localStorage.getItem(ONBOARDED_KEY) === "1");
     }, []);
 
     useEffect(() => {
-        const week = weekStartISO(weekStart);
-        loadTasks({ weekStart: week });
-        loadWeekSummary(week);
+        loadTasks({ weekStart: weekStartParam(weekStart) });
     }, [weekStart]);
 
-    const dayTasks = items.filter((task) => isSameDay(new Date(task.dateTime), selectedDay));
+    // Derive the weekly counts from the task list itself so the cards and progress bar
+    // update immediately when a task is toggled, added, edited or deleted.
+    const weekTasks = items.filter((task) => isInWeek(task.dateTime, weekStart));
+    const summary = countByStatus(weekTasks);
+    const dayTasks = weekTasks.filter((task) => isSameDay(new Date(task.dateTime), selectedDay));
 
-    const openCreateSheet = (): void => {
-        setEditingTask(null);
-        setSheetOpen(true);
-    };
-
-    const openEditSheet = (task: Task): void => {
-        setEditingTask(task);
-        setSheetOpen(true);
-    };
-
-    const submitSheet = (payload: TaskInput): void => {
-        if (editingTask) editTask(editingTask.id, payload);
-        else addTask(payload);
-        setSheetOpen(false);
-        setEditingTask(null);
-    };
-
-    if (onboarded === null) return <AppLayout><div className="min-h-[100dvh] bg-white" /></AppLayout>;
+    if (onboarded === null) return <AppLayout><div className="h-full bg-homeBg" /></AppLayout>;
 
     if (!onboarded) {
         return (
@@ -78,60 +61,55 @@ export default function Home() {
 
     return (
         <AppLayout>
-            <div className="bg-homeBg px-6 pb-28 pt-[37px]">
-                <SearchBar value="" onChange={() => {}} onFocus={() => router.push("/search")} />
-                <div className="mt-[13px]">
+            {/* Spacing follows the Figma Home frame: 37px top, 24px sides, 12px/30px section gaps */}
+            <div className="no-scrollbar h-full overflow-y-auto overflow-x-hidden bg-homeBg px-6 pb-[128px] pt-[37px]">
+                <SearchBar value="" onChange={() => { }} onFocus={() => router.push("/search")} />
+                <div className="mt-3">
                     <WeekStrip days={days} selectedDay={selectedDay} onSelectDay={selectDay} />
                 </div>
 
-                <div className="mt-[31px] flex gap-[18px]">
+                {/* This week's card: open vs completed counts. Tapping it opens the week list,
+                    where the current week's card is expanded to show all of its tasks. */}
+                <button
+                    onClick={() => router.push("/weeks")}
+                    aria-label={`This week: ${summary.completed} completed, ${summary.open} pending. Show all tasks for this week`}
+                    className="mt-[30px] flex w-full gap-[17px] text-left"
+                >
                     <SummaryCard type="complete" count={summary.completed} />
                     <SummaryCard type="pending" count={summary.open} />
-                </div>
+                </button>
 
-                <div className="mt-8">
+                <div className="mt-[30px]">
                     <WeeklyProgress open={summary.open} completed={summary.completed} />
                 </div>
 
-                <div className="mb-2 mt-[38px] flex items-center justify-between">
-                    <h2 className="text-[20px] font-semibold text-ink">{formatDayHeading(selectedDay)}</h2>
-                    <button onClick={() => router.push("/weeks")} className="text-[14px] font-medium text-primary">
+                <div className="mt-[30px] flex items-end justify-between">
+                    <h2 className="text-[18px] font-semibold leading-[27px] text-ink">{formatDayHeading(selectedDay)}</h2>
+                    <button onClick={() => router.push("/weeks")} className="text-[14px] font-medium leading-[21px] text-primary">
                         {labels.viewAll}
                     </button>
                 </div>
 
-                {dayTasks.length === 0 ? (
-                    <EmptyState title={labels.noTasksToday} subtitle="Tap + to add your first task for this day" />
-                ) : (
-                    dayTasks.map((task) => (
-                        <TaskRow
-                            key={task.id}
-                            task={task}
-                            onToggle={() => toggleTask(task)}
-                            onEdit={() => openEditSheet(task)}
-                            onDelete={() => removeTask(task.id)}
-                        />
-                    ))
-                )}
+                <div className="mt-[5px]">
+                    {dayTasks.length > 0 ? (
+                        dayTasks.map((task) => <TaskRow key={task.id} task={task} {...rowActions(task)} />)
+                    ) : status === "loading" ? (
+                        <EmptyState title={labels.loading} />
+                    ) : (
+                        <EmptyState title={labels.noTasksToday} subtitle="Tap + to add your first task for this day" />
+                    )}
+                </div>
             </div>
 
             <button
-                onClick={openCreateSheet}
+                onClick={() => openCreate(selectedDay)}
                 aria-label="Add task"
-                className="fixed bottom-[29px] left-1/2 z-40 flex h-[76px] w-[76px] -translate-x-1/2 items-center justify-center rounded-full bg-primary shadow-fab active:bg-primaryDark"
+                className="absolute bottom-7 left-1/2 z-40 flex h-[76px] w-[76px] -translate-x-1/2 items-center justify-center rounded-full bg-primary active:bg-primaryDark"
             >
                 <PlusIcon />
             </button>
 
-            <TaskSheet
-                open={sheetOpen}
-                task={editingTask}
-                onClose={() => {
-                    setSheetOpen(false);
-                    setEditingTask(null);
-                }}
-                onSubmit={submitSheet}
-            />
+            {sheets}
         </AppLayout>
     );
 }

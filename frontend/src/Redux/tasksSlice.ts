@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
 import TaskApi from "../Api/TaskApi";
-import seedTasks from "../data/seedTasks";
-import type { RootState } from "./store";
+import { apiErrorMessage } from "../Api/CommonApi";
 import type { Task, TaskInput, TaskQueryParams, TaskStatus, TaskUpdate, WeekSummary } from "../types/task";
 
 export type TasksStatus = "idle" | "loading" | "succeeded" | "failed";
@@ -11,78 +11,103 @@ export interface TasksState {
     searchResults: Task[];
     summary: WeekSummary;
     status: TasksStatus;
+    searchStatus: TasksStatus;
     error: string | null;
 }
 
 const initialState: TasksState = {
-    items: seedTasks,
+    items: [],
     searchResults: [],
     summary: { open: 0, completed: 0, total: 0 },
     status: "idle",
+    searchStatus: "idle",
     error: null,
 };
 
-export const fetchTasks = createAsyncThunk<Task[], TaskQueryParams>("tasks/fetchTasks", async (params: TaskQueryParams = {}) => {
-    return TaskApi.getTasks(params);
-});
+// Every thunk rejects with a readable message (via rejectWithValue) when the API call fails.
+// Nothing is applied locally on failure, so the UI never shows a change the server didn't save.
+type Rejected = { rejectValue: string };
 
-export const fetchWeekSummary = createAsyncThunk<WeekSummary, string>("tasks/fetchWeekSummary", async (weekStart: string) => {
-    return TaskApi.getWeekSummary(weekStart);
-});
-
-export const createTask = createAsyncThunk<Task, TaskInput>("tasks/createTask", async (payload: TaskInput) => {
-    try {
-        return await TaskApi.createTask(payload);
-    } catch (error) {
-        const now = new Date().toISOString();
-        return { ...payload, id: `local-${Date.now()}`, status: "In Progress" as const, createdAt: now, updatedAt: now };
+export const fetchTasks = createAsyncThunk<Task[], TaskQueryParams, Rejected>(
+    "tasks/fetchTasks",
+    async (params, { rejectWithValue }) => {
+        try {
+            return await TaskApi.getTasks(params);
+        } catch (error) {
+            return rejectWithValue(`Couldn't load tasks: ${apiErrorMessage(error)}`);
+        }
     }
-});
+);
 
-export const updateTask = createAsyncThunk<Partial<Task> & { id: string }, { id: string; changes: TaskUpdate }>(
+export const fetchWeekSummary = createAsyncThunk<WeekSummary, string, Rejected>(
+    "tasks/fetchWeekSummary",
+    async (weekStart, { rejectWithValue }) => {
+        try {
+            return await TaskApi.getWeekSummary(weekStart);
+        } catch (error) {
+            return rejectWithValue(`Couldn't load the week summary: ${apiErrorMessage(error)}`);
+        }
+    }
+);
+
+export const createTask = createAsyncThunk<Task, TaskInput, Rejected>(
+    "tasks/createTask",
+    async (payload, { rejectWithValue }) => {
+        try {
+            return await TaskApi.createTask(payload);
+        } catch (error) {
+            return rejectWithValue(`Couldn't create the task: ${apiErrorMessage(error)}`);
+        }
+    }
+);
+
+export const updateTask = createAsyncThunk<Task, { id: string; changes: TaskUpdate }, Rejected>(
     "tasks/updateTask",
-    async ({ id, changes }) => {
+    async ({ id, changes }, { rejectWithValue }) => {
         try {
             return await TaskApi.updateTask(id, changes);
         } catch (error) {
-            return { id, ...changes };
+            return rejectWithValue(`Couldn't save the task: ${apiErrorMessage(error)}`);
         }
     }
 );
 
-export const deleteTask = createAsyncThunk<string, string>("tasks/deleteTask", async (id: string) => {
-    await TaskApi.deleteTask(id).catch(() => {});
-    return id;
-});
+export const deleteTask = createAsyncThunk<string, string, Rejected>(
+    "tasks/deleteTask",
+    async (id, { rejectWithValue }) => {
+        try {
+            return await TaskApi.deleteTask(id);
+        } catch (error) {
+            return rejectWithValue(`Couldn't delete the task: ${apiErrorMessage(error)}`);
+        }
+    }
+);
 
-export const toggleTaskStatus = createAsyncThunk<Partial<Task> & { id: string }, { id: string; status: TaskStatus }>(
+export const toggleTaskStatus = createAsyncThunk<Task, { id: string; status: TaskStatus }, Rejected>(
     "tasks/toggleTaskStatus",
-    async ({ id, status }) => {
+    async ({ id, status }, { rejectWithValue }) => {
         try {
             return await TaskApi.toggleTaskStatus(id, status);
         } catch (error) {
-            return { id, status };
+            return rejectWithValue(`Couldn't update the task status: ${apiErrorMessage(error)}`);
         }
     }
 );
 
-export const searchTasks = createAsyncThunk<Task[], string, { state: RootState }>(
+export const searchTasks = createAsyncThunk<Task[], string, Rejected>(
     "tasks/searchTasks",
-    async (query: string, { getState }) => {
+    async (query, { rejectWithValue }) => {
         const trimmed = query.trim();
         if (!trimmed) return [];
         try {
             return await TaskApi.searchTasks(trimmed);
         } catch (error) {
-            const needle = trimmed.toLowerCase();
-            return getState().tasks.items.filter(
-                (task) =>
-                    task.title.toLowerCase().includes(needle) ||
-                    (task.description || "").toLowerCase().includes(needle)
-            );
+            return rejectWithValue(`Search failed: ${apiErrorMessage(error)}`);
         }
     }
 );
+
+const byDate = (a: Task, b: Task): number => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime();
 
 const tasksSlice = createSlice({
     name: "tasks",
@@ -90,9 +115,23 @@ const tasksSlice = createSlice({
     reducers: {
         clearSearch: (state) => {
             state.searchResults = [];
+            state.searchStatus = "idle";
+        },
+        clearError: (state) => {
+            state.error = null;
         },
     },
     extraReducers: (builder) => {
+        // Replace a task everywhere it is shown with the server's copy.
+        const replace = (state: TasksState, updated: Task): void => {
+            const apply = (task: Task): Task => (task.id === updated.id ? { ...task, ...updated } : task);
+            state.items = state.items.map(apply).sort(byDate);
+            state.searchResults = state.searchResults.map(apply);
+        };
+        const fail = (state: TasksState, action: PayloadAction<string | undefined>): void => {
+            state.error = action.payload ?? "Something went wrong";
+        };
+
         builder
             .addCase(fetchTasks.pending, (state) => {
                 state.status = "loading";
@@ -104,39 +143,38 @@ const tasksSlice = createSlice({
             })
             .addCase(fetchTasks.rejected, (state, action) => {
                 state.status = "failed";
-                state.error = action.error.message ?? null;
+                fail(state, action);
             })
             .addCase(fetchWeekSummary.fulfilled, (state, action) => {
                 state.summary = action.payload;
             })
-            .addCase(fetchWeekSummary.rejected, (state) => {
-                const open = state.items.filter((task) => task.status !== "Completed").length;
-                state.summary = { open, completed: state.items.length - open, total: state.items.length };
-            })
+            .addCase(fetchWeekSummary.rejected, fail)
             .addCase(createTask.fulfilled, (state, action) => {
-                state.items = [...state.items, action.payload].sort(
-                    (a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime()
-                );
+                state.items = [...state.items, action.payload].sort(byDate);
             })
-            .addCase(updateTask.fulfilled, (state, action) => {
-                state.items = state.items.map((task) =>
-                    task.id === action.payload.id ? { ...task, ...action.payload } : task
-                );
-            })
+            .addCase(createTask.rejected, fail)
+            .addCase(updateTask.fulfilled, (state, action) => replace(state, action.payload))
+            .addCase(updateTask.rejected, fail)
             .addCase(deleteTask.fulfilled, (state, action) => {
                 state.items = state.items.filter((task) => task.id !== action.payload);
                 state.searchResults = state.searchResults.filter((task) => task.id !== action.payload);
             })
-            .addCase(toggleTaskStatus.fulfilled, (state, action) => {
-                state.items = state.items.map((task) =>
-                    task.id === action.payload.id ? { ...task, status: action.payload.status ?? task.status } : task
-                );
+            .addCase(deleteTask.rejected, fail)
+            .addCase(toggleTaskStatus.fulfilled, (state, action) => replace(state, action.payload))
+            .addCase(toggleTaskStatus.rejected, fail)
+            .addCase(searchTasks.pending, (state) => {
+                state.searchStatus = "loading";
             })
             .addCase(searchTasks.fulfilled, (state, action) => {
+                state.searchStatus = "succeeded";
                 state.searchResults = action.payload;
+            })
+            .addCase(searchTasks.rejected, (state, action) => {
+                state.searchStatus = "failed";
+                fail(state, action);
             });
     },
 });
 
-export const { clearSearch } = tasksSlice.actions;
+export const { clearSearch, clearError } = tasksSlice.actions;
 export default tasksSlice.reducer;

@@ -1,44 +1,29 @@
 import { useEffect, useState } from "react";
+import { X, Clock, Calendar } from "lucide-react";
 import labels from "../labels/labels";
 import { combineDateTime, toDateInputValue, toTimeInputValue } from "../utils/format";
 import type { Priority, Task, TaskInput } from "../types/task";
 
 const priorities: Priority[] = ["Low", "Medium", "High"];
 
-const CloseIcon = () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#667085" strokeWidth="2" strokeLinecap="round">
-        <path d="M18 6 6 18M6 6l12 12" />
-    </svg>
-);
-
-const ClockIcon = () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#667085" strokeWidth="2" strokeLinecap="round">
-        <circle cx="12" cy="12" r="9" />
-        <path d="M12 7v5l3 2" />
-    </svg>
-);
-
-const CalendarIcon = () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#667085" strokeWidth="2" strokeLinecap="round">
-        <rect x="3" y="4" width="18" height="18" rx="2" />
-        <path d="M16 2v4M8 2v4M3 10h18" />
-    </svg>
-);
-
-const titleInputClass =
-    "h-10 w-full rounded-lg border border-line bg-white px-3.5 text-[15px] text-ink outline-none focus:border-primary placeholder:text-[#98A2B3]";
-
-const timeInputClass =
-    "h-[52px] w-full rounded-lg border border-line bg-white px-3.5 text-[15px] text-ink outline-none focus:border-primary placeholder:text-[#98A2B3]";
+// Figma "New Task" frame: labels Medium 12px #717171 with 8px below, fields 40px tall with a
+// 1px #EAEAEA border and 10px inset, field text Regular 14px/20px, 24px between sections.
+const labelClass = "mb-2 block text-[12px] font-medium leading-[18px] text-fieldLabel";
+const fieldClass =
+    "h-10 w-full border border-line bg-white px-[10px] text-[14px] font-normal leading-5 text-ink outline-none focus:border-primary placeholder:text-ink/40";
+const iconClass = "pointer-events-none absolute top-1/2 -translate-y-1/2 text-fieldLabel";
 
 interface TaskSheetProps {
     open: boolean;
     task: Task | null;
+    // Date pre-filled when creating a task (defaults to today).
+    defaultDate?: Date;
     onClose: () => void;
-    onSubmit: (payload: TaskInput) => void;
+    onSubmit: (payload: TaskInput) => void | Promise<void>;
 }
 
-export default function TaskSheet({ open, task, onClose, onSubmit }: TaskSheetProps) {
+export default function TaskSheet({ open, task, defaultDate, onClose, onSubmit }: TaskSheetProps) {
+    const [saving, setSaving] = useState(false);
     const [title, setTitle] = useState("");
     const [date, setDate] = useState("");
     const [startTime, setStartTime] = useState("10:00");
@@ -52,11 +37,12 @@ export default function TaskSheet({ open, task, onClose, onSubmit }: TaskSheetPr
         setTitle(task?.title || "");
         setDescription(task?.description || "");
         setPriority(task?.priority || "Medium");
-        setDate(toDateInputValue(task?.dateTime || new Date().toISOString()));
-        setStartTime(toTimeInputValue(task?.dateTime || new Date().toISOString()));
-        setEndTime(task?.endDateTime ? toTimeInputValue(task.endDateTime) : "11:00");
+        setDate(toDateInputValue(task?.dateTime || (defaultDate ?? new Date()).toISOString()));
+        setStartTime(task ? toTimeInputValue(task.dateTime) : "10:00");
+        setEndTime(task?.endDateTime ? toTimeInputValue(task.endDateTime) : task ? "" : "11:00");
         setError("");
-    }, [open, task]);
+        setSaving(false);
+    }, [open, task, defaultDate]);
 
     useEffect(() => {
         if (!open) return;
@@ -69,113 +55,128 @@ export default function TaskSheet({ open, task, onClose, onSubmit }: TaskSheetPr
 
     if (!open) return null;
 
-    const submit = (): void => {
+    const submit = async (): Promise<void> => {
         if (!title.trim()) return setError("Please enter a task title");
         if (!date) return setError("Please pick a date");
         if (!startTime) return setError("Please pick a start time");
-        onSubmit({
-            title: title.trim(),
-            description: description.trim(),
-            dateTime: combineDateTime(date, startTime),
-            endDateTime: endTime ? combineDateTime(date, endTime) : null,
-            priority,
-        });
+        if (endTime && endTime <= startTime) return setError("End time must be after the start time");
+        setError("");
+        setSaving(true);
+        try {
+            await onSubmit({
+                title: title.trim(),
+                description: description.trim(),
+                dateTime: combineDateTime(date, startTime),
+                endDateTime: endTime ? combineDateTime(date, endTime) : null,
+                priority,
+            });
+        } finally {
+            // If the save failed the sheet stays open, so re-enable the button.
+            setSaving(false);
+        }
     };
 
     return (
-        <div className="overlay-enter fixed inset-0 z-50 bg-black/50" onClick={onClose}>
+        // absolute (not fixed) so the overlay and sheet stay inside the 390x844 phone shell
+        <div className="overlay-enter absolute inset-0 z-50 bg-black/50" onClick={onClose}>
             <div
-                className="sheet-enter absolute bottom-0 left-1/2 flex h-[585px] w-full max-w-[390px] -translate-x-1/2 flex-col rounded-t-[24px] bg-white px-6 pb-[33px] pt-5 shadow-sheet"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="task-sheet-title"
+                className="sheet-enter absolute bottom-0 left-0 flex h-[585px] w-full flex-col bg-white px-6 pb-8 pt-6"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between">
-                    <h2 className="text-[18px] font-semibold text-ink">{task ? labels.editTask : labels.addTask}</h2>
-                    <button onClick={onClose} aria-label="Close" className="p-1">
-                        <CloseIcon />
+                    <h2 id="task-sheet-title" className="text-[18px] font-medium leading-[27px] text-ink">
+                        {task ? labels.editTask : labels.addTask}
+                    </h2>
+                    <button onClick={onClose} aria-label="Close">
+                        <X size={24} strokeWidth={1.5} color="#090E23" />
                     </button>
                 </div>
 
-                <div className="no-scrollbar mt-5 flex-1 overflow-y-auto">
-                    <label className="mb-1.5 block text-[13px] font-medium text-[#344054]">{labels.taskTitle}</label>
+                <div className="no-scrollbar mt-8 flex-1 overflow-y-auto">
+                    <label htmlFor="task-title" className={labelClass}>{labels.taskTitle}</label>
                     <input
+                        id="task-title"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         placeholder={labels.taskTitlePlaceholder}
-                        className={titleInputClass}
+                        className={fieldClass}
                     />
 
-                    <label className="mb-1.5 mt-4 block text-[13px] font-medium text-[#344054]">{labels.setTime}</label>
+                    <span className={`${labelClass} mt-6`}>{labels.setTime}</span>
                     <div className="flex gap-[30px]">
                         <div className="relative flex-1">
-                            <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2">
-                                <ClockIcon />
-                            </span>
+                            <Clock size={18} strokeWidth={1.5} className={`${iconClass} left-[10px]`} />
                             <input
                                 type="time"
+                                aria-label={labels.start}
                                 value={startTime}
                                 onChange={(e) => setStartTime(e.target.value)}
-                                className={`${timeInputClass} pl-10`}
+                                className={`${fieldClass} pl-10`}
                             />
                         </div>
                         <div className="relative flex-1">
-                            <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2">
-                                <ClockIcon />
-                            </span>
+                            <Clock size={18} strokeWidth={1.5} className={`${iconClass} left-[10px]`} />
                             <input
                                 type="time"
+                                aria-label={labels.ends}
                                 value={endTime}
                                 onChange={(e) => setEndTime(e.target.value)}
-                                className={`${timeInputClass} pl-10`}
+                                className={`${fieldClass} pl-10`}
                             />
                         </div>
                     </div>
 
-                    <label className="mb-1.5 mt-4 block text-[13px] font-medium text-[#344054]">{labels.setDate}</label>
+                    <label htmlFor="task-date" className={`${labelClass} mt-6`}>{labels.setDate}</label>
                     <div className="relative">
                         <input
+                            id="task-date"
                             type="date"
                             value={date}
                             onChange={(e) => setDate(e.target.value)}
-                            className={`${timeInputClass} pr-10`}
+                            className={`${fieldClass} pr-10`}
                         />
-                        <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2">
-                            <CalendarIcon />
-                        </span>
+                        <Calendar size={18} strokeWidth={1.5} className={`${iconClass} right-[11px]`} />
                     </div>
 
-                    <label className="mb-1.5 mt-4 block text-[13px] font-medium text-[#344054]">{labels.priority}</label>
-                    <div className="flex gap-2">
+                    <span className={`${labelClass} mt-6`}>{labels.priority}</span>
+                    <div className="flex gap-2" role="radiogroup" aria-label={labels.priority}>
                         {priorities.map((level) => (
                             <button
                                 key={level}
+                                role="radio"
+                                aria-checked={priority === level}
                                 onClick={() => setPriority(level)}
-                                className={`h-12 flex-1 rounded-lg border text-[14px] font-medium ${
-                                    priority === level
-                                        ? "border-primary bg-primaryLight text-primary"
-                                        : "border-line bg-white text-muted"
-                                }`}
+                                className={`h-10 flex-1 border text-[14px] font-normal leading-5 ${priority === level
+                                    ? "border-primary bg-primaryLight text-primary"
+                                    : "border-line bg-white text-ink"
+                                    }`}
                             >
                                 {level}
                             </button>
                         ))}
                     </div>
 
-                    <label className="mb-1.5 mt-4 block text-[13px] font-medium text-[#344054]">{labels.description}</label>
+                    <label htmlFor="task-description" className={`${labelClass} mt-6`}>{labels.description}</label>
                     <textarea
+                        id="task-description"
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         placeholder={labels.descriptionPlaceholder}
-                        className="h-[76px] w-full resize-none rounded-lg border border-line bg-white px-3.5 py-3 text-[15px] text-ink outline-none focus:border-primary placeholder:text-[#98A2B3]"
+                        className="h-[100px] w-full resize-none border border-line bg-white px-[10px] py-[10px] text-[14px] font-normal leading-5 text-ink outline-none focus:border-primary placeholder:text-ink/40"
                     />
 
-                    {error && <p className="mt-3 text-[13px] text-danger">{error}</p>}
+                    {error && <p role="alert" className="mt-3 text-[12px] leading-[18px] text-danger">{error}</p>}
                 </div>
 
                 <button
-                    onClick={submit}
-                    className="mt-5 h-12 w-full bg-primary text-[16px] font-semibold text-white active:bg-primaryDark"
+                    onClick={() => void submit()}
+                    disabled={saving}
+                    className="mt-[26px] h-12 w-full shrink-0 bg-primary text-[16px] font-medium leading-5 text-white active:bg-primaryDark disabled:opacity-60"
                 >
-                    {task ? labels.saveChanges : labels.createTask}
+                    {saving ? "Saving…" : task ? labels.saveChanges : labels.createTask}
                 </button>
             </div>
         </div>

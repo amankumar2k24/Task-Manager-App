@@ -12,11 +12,16 @@ const ensureDbReady = (): void => {
     }
 };
 
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+// weekStart is either a full ISO instant (the client's local Monday 00:00, e.g.
+// "2026-11-08T18:30:00.000Z" for IST) or a plain "YYYY-MM-DD", read as Monday 00:00 UTC.
+// Sending the instant keeps week boundaries correct in every timezone.
 const weekRange = (weekStart: string): { start: Date; end: Date } => {
-    const start = new Date(`${weekStart}T00:00:00.000Z`);
-    const end = new Date(start);
-    end.setUTCDate(end.getUTCDate() + 7);
-    return { start, end };
+    const start = new Date(DATE_ONLY.test(weekStart) ? `${weekStart}T00:00:00.000Z` : weekStart);
+    if (Number.isNaN(start.getTime())) throw new AppError(400, responseMessage.invalidWeekStart);
+    return { start, end: new Date(start.getTime() + WEEK_MS) };
 };
 
 const searchFilter = (search?: string): FilterQuery<TaskAttrs> => {
@@ -40,7 +45,7 @@ export const createTask = async (input: TaskInput): Promise<HydratedDocument<Tas
 export const getTasks = async (query: TaskListQuery): Promise<HydratedDocument<TaskAttrs>[]> => {
     ensureDbReady();
     const filter: FilterQuery<TaskAttrs> = { ...searchFilter(query.search), ...weekFilter(query.weekStart) };
-    return Task.find(filter).sort({ dateTime: 1 });
+    return Task.find(filter).sort({ dateTime: 1 }).limit(1000);
 };
 
 export const getWeekSummary = async (weekStart?: string): Promise<WeekSummaryResponse> => {

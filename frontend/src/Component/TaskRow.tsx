@@ -1,40 +1,23 @@
 import { useRef, useState } from "react";
 import type { TouchEvent } from "react";
-import PriorityBadge from "./PriorityBadge";
-import { timeRange } from "../utils/format";
+import { Trash2, SquarePen, Check } from "lucide-react";
 import labels from "../labels/labels";
 import type { Task } from "../types/task";
 
 const DELETE_WIDTH = 72;
 
-const CheckIcon = () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20 6 9 17l-5-5" />
-    </svg>
-);
-
-const TrashIcon = () => (
-    <svg width="20" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M3 6h18" />
-        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-        <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-    </svg>
-);
-
-const EditIcon = () => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
-    </svg>
-);
-
 interface TaskRowProps {
     task: Task;
     onToggle: () => void;
+    onView: () => void;
     onEdit: () => void;
     onDelete: () => void;
 }
 
-export default function TaskRow({ task, onToggle, onEdit, onDelete }: TaskRowProps) {
+// Figma: 20px square checkbox with 1px #4566EC border, 12px gap, title Medium 14px #090E23
+// (line-through when done), 24px trash/edit icons 11px apart. Rows sit 64px apart and the
+// divider starts under the title (32px from the left edge).
+export default function TaskRow({ task, onToggle, onView, onEdit, onDelete }: TaskRowProps) {
     const [offset, setOffset] = useState(0);
     const [dragging, setDragging] = useState(false);
     const startX = useRef(0);
@@ -71,38 +54,37 @@ export default function TaskRow({ task, onToggle, onEdit, onDelete }: TaskRowPro
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
-                className="relative flex items-center gap-3 border-b border-[#F1F1F2] bg-white py-3"
+                className="relative bg-homeBg pb-[19px] pt-[21px]"
                 style={{
                     transform: `translateX(${offset}px)`,
                     transition: dragging ? "none" : "transform 0.2s ease",
                 }}
             >
-                <button
-                    onClick={onToggle}
-                    aria-label={completed ? "Mark as in progress" : "Mark as completed"}
-                    className={`flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-md border-2 ${
-                        completed ? "border-primary bg-primary" : "border-[#D0D5DD] bg-white"
-                    }`}
-                >
-                    {completed && <CheckIcon />}
-                </button>
-                <button onClick={onEdit} className="min-w-0 flex-1 text-left">
-                    <span className={`block truncate text-[16px] font-medium ${completed ? "text-[#98A2B3] line-through" : "text-ink"}`}>
-                        {task.title}
-                    </span>
-                    <span className="mt-1 flex items-center gap-2 text-[12px] text-muted">
-                        {timeRange(task)}
-                        <PriorityBadge priority={task.priority} />
-                    </span>
-                </button>
-                <span className="flex shrink-0 items-center gap-3 text-[#98A2B3]">
-                    <button onClick={() => { reset(); onDelete(); }} aria-label="Delete task" className="p-0.5">
-                        <TrashIcon />
+                <div className="flex h-6 items-center gap-3">
+                    <button
+                        onClick={onToggle}
+                        role="checkbox"
+                        aria-checked={completed}
+                        aria-label={completed ? "Mark as in progress" : "Mark as completed"}
+                        className="flex h-5 w-5 shrink-0 items-center justify-center border border-primary bg-white"
+                    >
+                        {completed && <Check size={14} strokeWidth={2} color="#4566EC" />}
                     </button>
-                    <button onClick={() => { reset(); onEdit(); }} aria-label="Edit task" className="p-0.5">
-                        <EditIcon />
+                    <button onClick={() => { reset(); onView(); }} aria-label={`View ${task.title}`} className="min-w-0 flex-1 text-left">
+                        <span className={`block truncate text-[14px] font-medium leading-[21px] text-ink ${completed ? "line-through" : ""}`}>
+                            {task.title}
+                        </span>
                     </button>
-                </span>
+                    <span className="flex shrink-0 items-center gap-[11px] text-dayMuted">
+                        <button onClick={() => { reset(); onDelete(); }} aria-label="Delete task">
+                            <Trash2 size={24} strokeWidth={1.5} />
+                        </button>
+                        <button onClick={() => { reset(); onEdit(); }} aria-label="Edit task">
+                            <SquarePen size={24} strokeWidth={1.5} />
+                        </button>
+                    </span>
+                </div>
+                <span className="absolute bottom-0 left-8 right-0 h-px bg-line" aria-hidden="true" />
             </div>
         </div>
     );

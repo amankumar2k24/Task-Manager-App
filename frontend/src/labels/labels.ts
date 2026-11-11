@@ -31,6 +31,11 @@ const labels = {
     noResults: "No tasks match your search",
     noWeeks: "No tasks yet - add your first one",
     delete: "Delete",
+    status: "Status",
+    noDescription: "No description",
+    markCompleted: "Mark completed",
+    markInProgress: "Mark in progress",
+    loading: "Loading tasks…",
     cancel: "Cancel",
     ofDone: "done",
 } as const;

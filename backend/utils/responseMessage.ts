@@ -10,6 +10,7 @@ export const responseMessage = {
     databaseNotConnected: "Database is not connected",
     internalServerError: "Internal Server Error",
     validationError: "Error from validation",
+    invalidWeekStart: "weekStart must be a valid date (YYYY-MM-DD or an ISO timestamp)",
 } as const;
 
 export type ResponseMessage = (typeof responseMessage)[keyof typeof responseMessage];

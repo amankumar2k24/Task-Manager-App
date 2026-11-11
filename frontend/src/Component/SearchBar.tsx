@@ -1,11 +1,5 @@
+import { Search } from "lucide-react";
 import labels from "../labels/labels";
-
-const SearchIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#667085" strokeWidth="2" strokeLinecap="round">
-        <circle cx="11" cy="11" r="7" />
-        <path d="m20 20-3.5-3.5" />
-    </svg>
-);
 
 interface SearchBarProps {
     value: string;
@@ -16,14 +10,16 @@ interface SearchBarProps {
     onSubmit?: () => void;
 }
 
+// Figma: 47px tall, 4px radius, #E6E6E6 border, Poppins Light 12px placeholder at 60% black.
 export default function SearchBar({ value, onChange, onFocus, placeholder, autoFocus, onSubmit }: SearchBarProps) {
     return (
         <form
+            role="search"
             onSubmit={(e) => {
                 e.preventDefault();
                 onSubmit?.();
             }}
-            className="flex h-[47px] w-full items-center gap-2 rounded-md border border-searchBorder bg-white px-4"
+            className="flex h-[47px] w-full items-center gap-2 rounded-[4px] border border-searchBorder bg-white pl-5 pr-[14px]"
         >
             <input
                 type="text"
@@ -31,11 +27,12 @@ export default function SearchBar({ value, onChange, onFocus, placeholder, autoF
                 onChange={(e) => onChange(e.target.value)}
                 onFocus={onFocus}
                 autoFocus={autoFocus}
+                aria-label={placeholder || labels.searchPlaceholder}
                 placeholder={placeholder || labels.searchPlaceholder}
-                className="h-full flex-1 bg-transparent text-[15px] text-ink outline-none placeholder:text-[#98A2B3]"
+                className="h-full min-w-0 flex-1 bg-transparent text-[12px] font-light leading-[18px] text-black outline-none placeholder:text-black/60"
             />
             <button type="submit" aria-label="Search" className="shrink-0">
-                <SearchIcon />
+                <Search size={24} strokeWidth={1.5} color="#090E23" />
             </button>
         </form>
     );

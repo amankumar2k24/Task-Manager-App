@@ -16,24 +16,23 @@ Task-Manager-App
 ├── frontend/               Next.js app (TypeScript, strict)
 │   ├── pages/
 │   │   ├── _app.tsx        Redux Provider
-│   │   ├── _document.tsx   Inter font, meta
+│   │   ├── _document.tsx   Poppins font (300–700), meta
 │   │   ├── index.tsx       Onboarding + Home
 │   │   ├── search.tsx      Search screen
 │   │   └── weeks.tsx       Week cards, tap to expand
 │   ├── src/
 │   │   ├── Api/            apiInstance (axios), TaskApi, CommonApi
 │   │   ├── Component/      SearchBar, WeekStrip, SummaryCard, WeeklyProgress,
-│   │   │                   TaskRow, TaskSheet, WeekCard, Onboarding,
-│   │   │                   EmptyState, PriorityBadge
-│   │   ├── Layout/         MobileShell (390px app shell), AppLayout
+│   │   │                   TaskRow, TaskSheet (create/edit), TaskDetailSheet (view),
+│   │   │                   WeekCard, Onboarding, EmptyState, PriorityBadge, ErrorBanner
+│   │   ├── Layout/         MobileShell (full screen on phones, 390x844 frame on desktop), AppLayout
 │   │   ├── Redux/          store (RootState, AppDispatch), tasksSlice
-│   │   ├── hooks/          useTasks, useWeek
-│   │   ├── lib/            week.ts (Monday-start weeks, grouping)
+│   │   ├── hooks/          useTasks, useWeek, useTaskSheets (shared view/create/edit/delete flow)
+│   │   ├── lib/            week.ts (Monday-start weeks, grouping, timezone-safe week param)
 │   │   ├── types/          task.ts (Task, TaskInput, TaskUpdate, Priority,
 │   │   │                   TaskStatus, WeekSummary, WeekGroup, ApiResponse)
 │   │   ├── utils/          format.ts (dates, times)
 │   │   ├── labels/         labels.ts (every UI string in one place)
-│   │   ├── data/           seedTasks.ts (the 4 Figma tasks)
 │   │   └── theme.ts        Colours: primary #4566EC, complete #EFF2FF, pending #FFE6E7
 │   ├── styles/globals.css
 │   ├── tsconfig.json
@@ -61,12 +60,28 @@ Task-Manager-App
 
 ## Design
 
-Pixel-matched to the Figma file "To Do List Mobile app", measured at 100% zoom: frames 390 × 844, content 342 px with 24 px side margins. Colours: primary `#4566EC`, complete card `#EFF2FF`, pending card `#FFE6E7`, progress fill `#253C98` on `#DADAFF` track, search border `#E6E6E6`, home background `#FDFDFF`, dark text `#090E23`. Type uses the system sans-serif stack (the Figma font family is not verifiable from a guest view). Screens: Onboarding (552 px hero), Home, Add New Task sheet (390 × 585), Search, Weeks.
+Built from the Figma file "To Do List Mobile app" using the values read from the frames (Home, New Task, Onboarding, Search): frames 390 × 844, 24 px side margins, Poppins throughout.
 
-Two deliberate deviations from the Figma, both required by the brief:
+- **Type:** section titles SemiBold 18px, task titles Medium 14px, summary label Regular 12px / 28px, summary count SemiBold 22px, "This Week" Regular 10px, week strip 10px / 14px with 22px line height, search placeholder Light 12px, form labels Medium 12px, form fields Regular 14px / 20px, buttons Medium 16px.
+- **Colours:** primary `#4566EC`, complete card `#EFF2FF` (tile `#99ADFF`), pending card `#FFE6E7` (tile `#FFB1B5`), progress `#253C98` on `#DADAFF`, muted day text `#C0C0C0`, secondary text `#6E7180` / `#717171`, borders `#E6E6E6` / `#EAEAEA`, background `#FDFDFF`, text `#090E23`.
+- **Responsive:** on phones the app fills the whole screen; from 640 px up it renders as a centred 390 × 844 phone frame.
 
-- The Figma Add Task sheet has no Priority field, so one was added in the same visual style (Low / Medium / High, default Medium).
-- The iOS keyboard drawn in the Figma search frame is the phone keyboard, not UI — the web app brings up the device keyboard when the search field is focused.
+Where the app differs from the Figma, and why:
+
+- **Home screen and week cards.** The Figma home screen shows the selected day's tasks, so that is the home layout. The brief's weekly cards are covered two ways: the home screen's Task Complete / Task Pending cards are this week's card (open vs completed counts) and tapping them, or "View All", opens the week list, where every week is a card with its counts and the current week is expanded to show all of its tasks. Tapping any week card expands or collapses it.
+- **Priority field.** The Figma Add Task sheet has no Priority field; the brief requires one, so it was added in the same style (Low / Medium / High, default Medium).
+- **Task details view.** The brief asks to "view, edit, or delete" tasks. Tapping a task opens a read-only details sheet (date, time, priority, status, description) with Edit, Delete and Mark completed / in progress actions. The trash and edit icons on each row, and swipe-left-to-delete on touch screens, still work directly.
+- **Rows show only the title**, as in the Figma; time and priority are in the details sheet.
+- **Icons** are Lucide/Feather equivalents of the Figma icons (the Figma layers are Feather's `edit`, `trash-2`, `search`, `plus`, `arrow-left`).
+- **Week strip** shows the real Monday–Sunday week (the Figma mockup shows eight days).
+- The iOS keyboard drawn in the Figma search frame is the phone keyboard, not UI — the device keyboard opens when the search field is focused.
+
+## Behaviour notes
+
+- **Live counts.** The summary cards and Weekly Progress bar are computed from the week's task list, so they update the moment a task is toggled, added, edited or deleted.
+- **New tasks go into the selected week.** The + button pre-fills the date with the day selected in the week strip.
+- **Timezone-safe weeks.** Weeks run Monday 00:00 to Sunday 23:59 in the user's local time. The frontend sends the exact instant of local Monday 00:00 (e.g. `2026-11-08T18:30:00.000Z` in IST) so the API filters with the same boundaries.
+- **Errors are never hidden.** Every change is applied only after the API confirms it. If a request fails, a red banner explains what went wrong, and the create/edit sheet stays open with your input so you can retry.
 
 ## API
 
@@ -74,8 +89,8 @@ Base: `<backend-url>/api/tasks`
 
 | Method | Route | Description |
 | --- | --- | --- |
-| GET | `/tasks?search=&weekStart=YYYY-MM-DD` | List tasks, optional keyword search and week filter |
-| GET | `/tasks/summary?weekStart=YYYY-MM-DD` | `{ open, completed, total }` for a week |
+| GET | `/tasks?search=&weekStart=` | List tasks, optional keyword search (title or description) and week filter |
+| GET | `/tasks/summary?weekStart=` | `{ open, completed, total }` for a week |
 | POST | `/tasks` | Create task (title + dateTime required) |
 | GET | `/tasks/:id` | One task |
 | PUT | `/tasks/:id` | Update any attribute |
@@ -84,6 +99,8 @@ Base: `<backend-url>/api/tasks`
 | GET | `/health` | `{ message: "Server health is green and running" }` |
 
 Task shape: `{ title, description, dateTime, endDateTime, priority: Low|Medium|High, status: In Progress|Completed }`.
+
+`weekStart` is the start of the week: either an ISO timestamp for the client's local Monday 00:00 (what the frontend sends, timezone-safe) or a plain `YYYY-MM-DD`, read as Monday 00:00 UTC. The range covers the following 7 days. An invalid value returns `400`.
 
 ## Run locally
 
@@ -126,7 +143,7 @@ cd backend && npm run build    # tsc emits JavaScript to backend/dist
 cd backend && npm start        # node dist/index.js
 ```
 
-In development, Next.js proxies same-origin `/api/*` calls to the Express server on port 5000, so no extra configuration is needed. The app also works with no database at all: the Redux slice starts from the four Figma seed tasks and applies creates/updates/deletes locally when the API is unreachable.
+In development, Next.js proxies same-origin `/api/*` calls to the Express server on port 5000, so no extra configuration is needed. The frontend needs the API running: it shows only data from the API, and if the API or database is unavailable it shows an error banner instead of pretending changes were saved.
 
 ## Deploy on Vercel
 

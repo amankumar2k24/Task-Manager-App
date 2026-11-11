@@ -25,6 +25,10 @@ export const weekStartISO = (date: Date): string => {
     return `${monday.getFullYear()}-${month}-${day}`;
 };
 
+// The exact instant of local Monday 00:00 as an ISO string, sent to the API so the backend
+// uses the same week boundaries as the user's timezone (e.g. "2026-11-08T18:30:00.000Z" in IST).
+export const weekStartParam = (date: Date): string => startOfWeek(date).toISOString();
+
 export const isSameDay = (a: Date, b: Date): boolean => startOfDay(a).getTime() === startOfDay(b).getTime();
 
 export const isToday = (date: Date): boolean => isSameDay(date, new Date());

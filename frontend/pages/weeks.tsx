@@ -1,26 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/router";
+import { ArrowLeft } from "lucide-react";
 import AppLayout from "../src/Layout/AppLayout";
 import WeekCard from "../src/Component/WeekCard";
-import TaskSheet from "../src/Component/TaskSheet";
 import EmptyState from "../src/Component/EmptyState";
 import { useTasks } from "../src/hooks/useTasks";
+import { useTaskSheets } from "../src/hooks/useTaskSheets";
 import { groupTasksByWeek, startOfWeek } from "../src/lib/week";
 import labels from "../src/labels/labels";
-import type { Task, TaskInput } from "../src/types/task";
-
-const BackIcon = () => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#101828" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M19 12H5" />
-        <path d="m12 19-7-7 7-7" />
-    </svg>
-);
 
 export default function Weeks() {
     const router = useRouter();
-    const [sheetOpen, setSheetOpen] = useState(false);
-    const [editingTask, setEditingTask] = useState<Task | null>(null);
-    const { items, loadTasks, editTask, toggleTask, removeTask } = useTasks();
+    const { items, status, loadTasks } = useTasks();
+    const { rowActions, sheets } = useTaskSheets();
 
     useEffect(() => {
         loadTasks({});
@@ -29,28 +21,18 @@ export default function Weeks() {
     const groups = groupTasksByWeek(items);
     const currentWeekStart = startOfWeek(new Date()).getTime();
 
-    const openEditSheet = (task: Task): void => {
-        setEditingTask(task);
-        setSheetOpen(true);
-    };
-
-    const submitSheet = (payload: TaskInput): void => {
-        if (!editingTask) return;
-        editTask(editingTask.id, payload);
-        setSheetOpen(false);
-        setEditingTask(null);
-    };
-
     return (
         <AppLayout>
-            <div className="px-6 pb-10 pt-[37px]">
-                <div className="mb-5 flex items-center gap-3">
-                    <button onClick={() => router.back()} aria-label="Back" className="p-1">
-                        <BackIcon />
+            <div className="no-scrollbar h-full overflow-y-auto overflow-x-hidden bg-homeBg px-6 pb-10 pt-[31px]">
+                <div className="mb-[30px] flex items-center gap-3">
+                    <button onClick={() => router.back()} aria-label="Back">
+                        <ArrowLeft size={24} strokeWidth={1.5} color="#090E23" />
                     </button>
-                    <h1 className="text-[20px] font-bold text-ink">{labels.allWeeks}</h1>
+                    <h1 className="text-[18px] font-semibold leading-[27px] text-ink">{labels.allWeeks}</h1>
                 </div>
-                {groups.length === 0 ? (
+                {status === "loading" && groups.length === 0 ? (
+                    <EmptyState title={labels.loading} />
+                ) : groups.length === 0 ? (
                     <EmptyState title={labels.noWeeks} />
                 ) : (
                     <div className="flex flex-col gap-3">
@@ -60,24 +42,14 @@ export default function Weeks() {
                                 weekStart={group.weekStart}
                                 tasks={group.tasks}
                                 defaultExpanded={group.weekStart.getTime() === currentWeekStart}
-                                onToggle={toggleTask}
-                                onEdit={openEditSheet}
-                                onDelete={removeTask}
+                                rowActions={rowActions}
                             />
                         ))}
                     </div>
                 )}
             </div>
 
-            <TaskSheet
-                open={sheetOpen}
-                task={editingTask}
-                onClose={() => {
-                    setSheetOpen(false);
-                    setEditingTask(null);
-                }}
-                onSubmit={submitSheet}
-            />
+            {sheets}
         </AppLayout>
     );
 }

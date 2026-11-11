@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import MobileShell from "./MobileShell";
+import ErrorBanner from "../Component/ErrorBanner";
 
 interface AppLayoutProps {
     children: ReactNode;
@@ -8,7 +9,8 @@ interface AppLayoutProps {
 export default function AppLayout({ children }: AppLayoutProps) {
     return (
         <MobileShell>
-            <main>{children}</main>
+            <main className="relative h-full">{children}</main>
+            <ErrorBanner />
         </MobileShell>
     );
 }

@@ -1,5 +1,5 @@
 module.exports = {
-  content: ["./pages/**/*.{js,jsx}", "./src/**/*.{js,jsx}"],
+  content: ["./pages/**/*.{js,ts,jsx,tsx}", "./src/**/*.{js,ts,jsx,tsx}"],
   theme: {
     extend: {
       colors: {
@@ -15,9 +15,18 @@ module.exports = {
         searchBorder: "#E6E6E6",
         track: "#DADAFF",
         homeBg: "#FDFDFF",
+        // Values below come from the Figma "To-Do List Mobile app" file
+        dayMuted: "#C0C0C0",
+        completeTile: "#99ADFF",
+        pendingTile: "#FFB1B5",
+        weekText: "#6E7180",
+        fieldLabel: "#717171",
       },
       fontFamily: {
-        sans: ["system-ui", "-apple-system", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
+        sans: ["Poppins", "system-ui", "-apple-system", "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "sans-serif"],
+      },
+      letterSpacing: {
+        tighter: '-0.02em',
       },
       boxShadow: {
         fab: "0 8px 20px rgba(69,102,236,0.45)",

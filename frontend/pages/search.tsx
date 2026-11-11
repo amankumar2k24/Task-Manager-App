@@ -1,27 +1,19 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { ArrowLeft } from "lucide-react";
 import AppLayout from "../src/Layout/AppLayout";
 import SearchBar from "../src/Component/SearchBar";
 import TaskRow from "../src/Component/TaskRow";
-import TaskSheet from "../src/Component/TaskSheet";
 import EmptyState from "../src/Component/EmptyState";
 import { useTasks } from "../src/hooks/useTasks";
+import { useTaskSheets } from "../src/hooks/useTaskSheets";
 import labels from "../src/labels/labels";
-import type { Task, TaskInput } from "../src/types/task";
-
-const BackIcon = () => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#101828" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M19 12H5" />
-        <path d="m12 19-7-7 7-7" />
-    </svg>
-);
 
 export default function Search() {
     const router = useRouter();
     const [query, setQuery] = useState("");
-    const [sheetOpen, setSheetOpen] = useState(false);
-    const [editingTask, setEditingTask] = useState<Task | null>(null);
-    const { items, searchResults, search, clearSearch, editTask, removeTask, toggleTask } = useTasks();
+    const { searchResults, searchStatus, search, clearSearch } = useTasks();
+    const { rowActions, sheets } = useTaskSheets();
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -31,56 +23,32 @@ export default function Search() {
         return () => clearTimeout(timer);
     }, [query]);
 
-    const results = query.trim() ? searchResults : items;
+    const hasQuery = query.trim().length > 0;
 
-    const openEditSheet = (task: Task): void => {
-        setEditingTask(task);
-        setSheetOpen(true);
-    };
-
-    const submitSheet = (payload: TaskInput): void => {
-        if (!editingTask) return;
-        editTask(editingTask.id, payload);
-        setSheetOpen(false);
-        setEditingTask(null);
-    };
+    const emptyState = (() => {
+        if (!hasQuery) return <EmptyState title={labels.searchHint} subtitle="Search by title or description" />;
+        if (searchStatus === "loading") return <EmptyState title="Searching…" />;
+        return <EmptyState title={labels.noResults} subtitle="Try a different keyword" />;
+    })();
 
     return (
         <AppLayout>
-            <div className="px-6 pb-10 pt-[37px]">
-                <button onClick={() => router.back()} aria-label="Back" className="mb-4 p-1">
-                    <BackIcon />
+            {/* Figma search frame: back arrow at 31px, search box 29px below it, results 45px below the box */}
+            <div className="no-scrollbar h-full overflow-y-auto overflow-x-hidden bg-white px-6 pb-10 pt-[31px]">
+                <button onClick={() => router.back()} aria-label="Back" className="block">
+                    <ArrowLeft size={24} strokeWidth={1.5} color="#090E23" />
                 </button>
-                <SearchBar value={query} onChange={setQuery} autoFocus placeholder={labels.searchPlaceholder} />
-                <div className="mt-4">
-                    {results.length === 0 ? (
-                        <EmptyState
-                            title={query.trim() ? labels.noResults : labels.searchHint}
-                            subtitle={query.trim() ? "Try a different keyword" : "Search by title or description"}
-                        />
-                    ) : (
-                        results.map((task) => (
-                            <TaskRow
-                                key={task.id}
-                                task={task}
-                                onToggle={() => toggleTask(task)}
-                                onEdit={() => openEditSheet(task)}
-                                onDelete={() => removeTask(task.id)}
-                            />
-                        ))
-                    )}
+                <div className="mt-[29px]">
+                    <SearchBar value={query} onChange={setQuery} autoFocus placeholder={labels.searchPlaceholder} />
+                </div>
+                <div className="mt-[22px]">
+                    {hasQuery && searchResults.length > 0
+                        ? searchResults.map((task) => <TaskRow key={task.id} task={task} {...rowActions(task)} />)
+                        : emptyState}
                 </div>
             </div>
 
-            <TaskSheet
-                open={sheetOpen}
-                task={editingTask}
-                onClose={() => {
-                    setSheetOpen(false);
-                    setEditingTask(null);
-                }}
-                onSubmit={submitSheet}
-            />
+            {sheets}
         </AppLayout>
     );
 }

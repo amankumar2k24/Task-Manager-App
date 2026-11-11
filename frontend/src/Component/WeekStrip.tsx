@@ -7,25 +7,28 @@ interface WeekStripProps {
     onSelectDay: (day: Date) => void;
 }
 
+// Figma: day name Regular 10px / date Medium 14px, both 22px line height, #C0C0C0.
+// Selected day is a blue block (6px vertical padding) with a 4px dot underneath the date.
 export default function WeekStrip({ days, selectedDay, onSelectDay }: WeekStripProps) {
     return (
-        <div className="flex w-full items-start justify-between">
+        <div className="-mx-[6px] flex items-start justify-between">
             {days.map((day) => {
-                const today = isToday(day);
                 const selected = isSameDay(day, selectedDay);
+                const today = isToday(day);
                 return (
                     <button
                         key={day.toISOString()}
                         onClick={() => onSelectDay(day)}
-                        className={`flex h-[63px] w-[39px] flex-col items-center justify-center gap-1 rounded-xl px-1 ${
-                            today ? "bg-primary text-white" : selected ? "bg-[#F2F4F7] text-ink" : "text-ink"
-                        }`}
+                        aria-pressed={selected}
+                        aria-label={day.toDateString()}
+                        className={`flex min-w-[35px] flex-col items-center justify-center px-2 text-center ${selected ? "gap-1 bg-primary py-[6px] text-white" : "py-1 text-dayMuted"
+                            }`}
                     >
-                        <span className={`text-[11px] leading-none ${today ? "text-white/80" : "text-muted"}`}>
-                            {formatDayName(day)}
+                        <span className="flex flex-col">
+                            <span className="text-[10px] font-normal leading-[22px]">{formatDayName(day)}</span>
+                            <span className="text-[14px] font-medium leading-[22px]">{String(day.getDate()).padStart(2, "0")}</span>
                         </span>
-                        <span className="text-[15px] font-semibold leading-none">{day.getDate()}</span>
-                        <span className={`h-1 w-1 rounded-full ${today ? "bg-white" : "bg-transparent"}`} />
+                        {selected && <span className={`h-1 w-1 rounded-full ${today ? "bg-white" : "bg-white/60"}`} />}
                     </button>
                 );
             })}
