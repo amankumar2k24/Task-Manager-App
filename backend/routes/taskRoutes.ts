@@ -1,7 +1,7 @@
-const express = require("express");
-const { createTask, getTasks, getWeekSummary, getTaskById, updateTask, deleteTask, toggleStatus } = require("../controller/task");
-const validate = require("../middleware/validate");
-const { createTaskSchema, updateTaskSchema, statusSchema } = require("../validation/taskValidation");
+import express from "express";
+import { createTask, deleteTask, getTaskById, getTasks, getWeekSummary, toggleStatus, updateTask } from "../controller/task";
+import validate from "../middleware/validate";
+import { createTaskSchema, statusSchema, updateTaskSchema } from "../validation/taskValidation";
 
 const router = express.Router();
 
@@ -13,4 +13,4 @@ router.put("/:id", validate(updateTaskSchema), updateTask);
 router.patch("/:id/status", validate(statusSchema), toggleStatus);
 router.delete("/:id", deleteTask);
 
-module.exports = router;
+export default router;

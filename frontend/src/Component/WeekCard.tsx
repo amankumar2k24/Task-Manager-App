@@ -1,8 +1,13 @@
 import { useState } from "react";
 import TaskRow from "./TaskRow";
 import { countByStatus, weekLabel } from "../lib/week";
+import type { Task } from "../types/task";
 
-const ChevronIcon = ({ open }) => (
+interface ChevronIconProps {
+    open: boolean;
+}
+
+const ChevronIcon = ({ open }: ChevronIconProps) => (
     <svg
         width="18"
         height="18"
@@ -18,7 +23,16 @@ const ChevronIcon = ({ open }) => (
     </svg>
 );
 
-export default function WeekCard({ weekStart, tasks, defaultExpanded, onToggle, onEdit, onDelete }) {
+interface WeekCardProps {
+    weekStart: Date;
+    tasks: Task[];
+    defaultExpanded?: boolean;
+    onToggle: (task: Task) => void;
+    onEdit: (task: Task) => void;
+    onDelete: (id: string) => void;
+}
+
+export default function WeekCard({ weekStart, tasks, defaultExpanded, onToggle, onEdit, onDelete }: WeekCardProps) {
     const [expanded, setExpanded] = useState(!!defaultExpanded);
     const { open, completed } = countByStatus(tasks);
 
@@ -40,7 +54,7 @@ export default function WeekCard({ weekStart, tasks, defaultExpanded, onToggle, 
                 <div className="border-t border-line px-4">
                     {tasks
                         .slice()
-                        .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime))
+                        .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
                         .map((task) => (
                             <TaskRow
                                 key={task.id}

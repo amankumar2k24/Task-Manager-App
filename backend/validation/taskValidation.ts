@@ -1,23 +1,24 @@
-const Joi = require("joi");
+import Joi from "joi";
+import type { StatusInput, TaskInput, TaskUpdateInput } from "../types/task";
 
-exports.createTaskSchema = Joi.object({
+export const createTaskSchema = Joi.object<TaskInput>({
     title: Joi.string().trim().min(1).max(200).required(),
     description: Joi.string().allow("").max(1000),
     dateTime: Joi.date().iso().required(),
     endDateTime: Joi.date().iso().allow(null),
     priority: Joi.string().valid("Low", "Medium", "High"),
-    status: Joi.string().valid("In Progress", "Completed")
+    status: Joi.string().valid("In Progress", "Completed"),
 });
 
-exports.updateTaskSchema = Joi.object({
+export const updateTaskSchema = Joi.object<TaskUpdateInput>({
     title: Joi.string().trim().min(1).max(200),
     description: Joi.string().allow("").max(1000),
     dateTime: Joi.date().iso(),
     endDateTime: Joi.date().iso().allow(null),
     priority: Joi.string().valid("Low", "Medium", "High"),
-    status: Joi.string().valid("In Progress", "Completed")
+    status: Joi.string().valid("In Progress", "Completed"),
 }).min(1);
 
-exports.statusSchema = Joi.object({
-    status: Joi.string().valid("In Progress", "Completed").required()
+export const statusSchema = Joi.object<StatusInput>({
+    status: Joi.string().valid("In Progress", "Completed").required(),
 });

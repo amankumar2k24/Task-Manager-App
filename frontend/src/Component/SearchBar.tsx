@@ -7,7 +7,16 @@ const SearchIcon = () => (
     </svg>
 );
 
-export default function SearchBar({ value, onChange, onFocus, placeholder, autoFocus, onSubmit }) {
+interface SearchBarProps {
+    value: string;
+    onChange: (value: string) => void;
+    onFocus?: () => void;
+    placeholder?: string;
+    autoFocus?: boolean;
+    onSubmit?: () => void;
+}
+
+export default function SearchBar({ value, onChange, onFocus, placeholder, autoFocus, onSubmit }: SearchBarProps) {
     return (
         <form
             onSubmit={(e) => {

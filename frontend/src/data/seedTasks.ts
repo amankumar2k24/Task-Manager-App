@@ -1,10 +1,12 @@
-const at = (hour, minute = 0) => {
+import type { Task } from "../types/task";
+
+const at = (hour: number, minute = 0): string => {
     const date = new Date();
     date.setHours(hour, minute, 0, 0);
     return date.toISOString();
 };
 
-const seedTasks = [
+const seedTasks: Task[] = [
     {
         id: "seed-1",
         title: "Finishing Wireframe",

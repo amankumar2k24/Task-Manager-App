@@ -4,46 +4,51 @@ A mobile to-do list app built to the Figma design for the SDE-1 (MERN Stack) ass
 
 ## Stack
 
-- **Frontend** — Next.js (Pages Router) + React + Tailwind CSS, JavaScript only
-- **State** — Redux Toolkit, async thunks over the Task API
-- **Backend** — Node.js + Express 5 + MongoDB (Mongoose) + Joi validation
+- **Frontend** — Next.js (Pages Router) + React + Tailwind CSS, TypeScript (strict mode)
+- **State** — Redux Toolkit, typed async thunks over the Task API
+- **Backend** — Node.js + Express 5 + MongoDB (Mongoose) + Joi validation, TypeScript (strict mode)
 - **Deploy** — Vercel, one project per folder (see below)
 
 ## Project structure
 
 ```text
 Task-Manager-App
-├── frontend/               Next.js app
+├── frontend/               Next.js app (TypeScript, strict)
 │   ├── pages/
-│   │   ├── _app.js         Redux Provider
-│   │   ├── _document.js    Inter font, meta
-│   │   ├── index.js        Onboarding + Home
-│   │   ├── search.js       Search screen
-│   │   └── weeks.js        Week cards, tap to expand
+│   │   ├── _app.tsx        Redux Provider
+│   │   ├── _document.tsx   Inter font, meta
+│   │   ├── index.tsx       Onboarding + Home
+│   │   ├── search.tsx      Search screen
+│   │   └── weeks.tsx       Week cards, tap to expand
 │   ├── src/
 │   │   ├── Api/            apiInstance (axios), TaskApi, CommonApi
 │   │   ├── Component/      SearchBar, WeekStrip, SummaryCard, WeeklyProgress,
 │   │   │                   TaskRow, TaskSheet, WeekCard, Onboarding,
 │   │   │                   EmptyState, PriorityBadge
 │   │   ├── Layout/         MobileShell (390px app shell), AppLayout
-│   │   ├── Redux/          store, tasksSlice
+│   │   ├── Redux/          store (RootState, AppDispatch), tasksSlice
 │   │   ├── hooks/          useTasks, useWeek
-│   │   ├── lib/            week.js (Monday-start weeks, grouping)
-│   │   ├── utils/          format.js (dates, times)
-│   │   ├── labels/         labels.js (every UI string in one place)
-│   │   ├── data/           seedTasks.js (the 4 Figma tasks)
-│   │   └── theme.jsx       Colours: primary #4566EC, complete #EFF2FF, pending #FFE6E7
+│   │   ├── lib/            week.ts (Monday-start weeks, grouping)
+│   │   ├── types/          task.ts (Task, TaskInput, TaskUpdate, Priority,
+│   │   │                   TaskStatus, WeekSummary, WeekGroup, ApiResponse)
+│   │   ├── utils/          format.ts (dates, times)
+│   │   ├── labels/         labels.ts (every UI string in one place)
+│   │   ├── data/           seedTasks.ts (the 4 Figma tasks)
+│   │   └── theme.ts        Colours: primary #4566EC, complete #EFF2FF, pending #FFE6E7
 │   ├── styles/globals.css
+│   ├── tsconfig.json
 │   └── package.json
 └── backend/                Express + MongoDB API (mirrors K-and-A-Jewellery-Bills/backend)
-    ├── api/index.js        Vercel serverless entry - mounts the Express app
-    ├── controller/task.js  getTasks, getWeekSummary, create/update/delete/toggle
-    ├── middleware/validate.js
-    ├── model/task.js
-    ├── routes/taskRoutes.js
-    ├── validation/taskValidation.js
-    ├── index.js            Express app, /api/tasks, GET /health
-    ├── seed.js             Inserts the 4 Figma demo tasks when the DB is empty
+    ├── api/index.ts        Vercel serverless entry - mounts the Express app
+    ├── controller/task.ts  getTasks, getWeekSummary, create/update/delete/toggle
+    ├── middleware/validate.ts
+    ├── model/task.ts       TaskAttrs interface, Mongoose model
+    ├── routes/taskRoutes.ts
+    ├── types/task.ts       TaskInput, TaskUpdateInput, StatusInput, WeekSummaryResponse
+    ├── validation/taskValidation.ts
+    ├── index.ts            Express app, /api/tasks, GET /health
+    ├── seed.ts             Inserts the 4 Figma demo tasks when the DB is empty
+    ├── tsconfig.json
     ├── vercel.json         Rewrites /api/* to the serverless Express entry
     ├── .env.example
     └── package.json
@@ -104,8 +109,16 @@ cd backend && npm run seed
 Run the API and the frontend in two terminals:
 
 ```bash
-cd backend && npm run dev    # Express on http://localhost:5000
+cd backend && npm run dev    # tsx watch, Express on http://localhost:5000
 cd frontend && npm run dev   # Next.js on http://localhost:3000
+```
+
+Typecheck and build each side:
+
+```bash
+cd frontend && npm run build   # Next.js typechecks, then builds
+cd backend && npm run build    # tsc emits JavaScript to backend/dist
+cd backend && npm start        # node dist/index.js
 ```
 
 In development, Next.js proxies same-origin `/api/*` calls to the Express server on port 5000, so no extra configuration is needed. The app also works with no database at all: the Redux slice starts from the four Figma seed tasks and applies creates/updates/deletes locally when the API is unreachable.
@@ -118,7 +131,7 @@ Deploy the two folders as two Vercel projects:
 
 1. Import this repo in Vercel with the Root Directory set to `backend`.
 2. Set the environment variable `MONGO_DB_URI` to your Atlas connection string.
-3. Deploy. `/api/*` is rewritten to the Express app in `backend/api/index.js`. Note the live backend URL.
+3. Deploy. `/api/*` is rewritten to the Express app in `backend/api/index.ts`. Note the live backend URL.
 
 **Frontend**
 

@@ -23,6 +23,8 @@ const theme = {
     frameHeight: 844,
     contentWidth: 342,
     margin: 24,
-};
+} as const;
+
+export type Theme = typeof theme;
 
 export default theme;

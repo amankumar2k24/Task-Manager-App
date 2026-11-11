@@ -1,7 +1,9 @@
 import { useRef, useState } from "react";
+import type { TouchEvent } from "react";
 import PriorityBadge from "./PriorityBadge";
 import { timeRange } from "../utils/format";
 import labels from "../labels/labels";
+import type { Task } from "../types/task";
 
 const DELETE_WIDTH = 72;
 
@@ -25,30 +27,37 @@ const EditIcon = () => (
     </svg>
 );
 
-export default function TaskRow({ task, onToggle, onEdit, onDelete }) {
+interface TaskRowProps {
+    task: Task;
+    onToggle: () => void;
+    onEdit: () => void;
+    onDelete: () => void;
+}
+
+export default function TaskRow({ task, onToggle, onEdit, onDelete }: TaskRowProps) {
     const [offset, setOffset] = useState(0);
     const [dragging, setDragging] = useState(false);
     const startX = useRef(0);
     const startOffset = useRef(0);
     const completed = task.status === "Completed";
 
-    const handleTouchStart = (e) => {
+    const handleTouchStart = (e: TouchEvent<HTMLDivElement>): void => {
         startX.current = e.touches[0].clientX;
         startOffset.current = offset;
         setDragging(true);
     };
 
-    const handleTouchMove = (e) => {
+    const handleTouchMove = (e: TouchEvent<HTMLDivElement>): void => {
         const dx = e.touches[0].clientX - startX.current;
         setOffset(Math.max(-DELETE_WIDTH, Math.min(0, startOffset.current + dx)));
     };
 
-    const handleTouchEnd = () => {
+    const handleTouchEnd = (): void => {
         setDragging(false);
         setOffset((current) => (current < -DELETE_WIDTH / 2 ? -DELETE_WIDTH : 0));
     };
 
-    const reset = () => setOffset(0);
+    const reset = (): void => setOffset(0);
 
     return (
         <div className="relative overflow-hidden">

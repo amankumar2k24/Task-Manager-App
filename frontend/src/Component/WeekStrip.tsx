@@ -1,7 +1,13 @@
 import { formatDayName } from "../utils/format";
 import { isSameDay, isToday } from "../lib/week";
 
-export default function WeekStrip({ days, selectedDay, onSelectDay }) {
+interface WeekStripProps {
+    days: Date[];
+    selectedDay: Date;
+    onSelectDay: (day: Date) => void;
+}
+
+export default function WeekStrip({ days, selectedDay, onSelectDay }: WeekStripProps) {
     return (
         <div className="flex w-full items-start justify-between">
             {days.map((day) => {

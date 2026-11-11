@@ -33,6 +33,8 @@ const labels = {
     delete: "Delete",
     cancel: "Cancel",
     ofDone: "done",
-};
+} as const;
+
+export type Labels = typeof labels;
 
 export default labels;

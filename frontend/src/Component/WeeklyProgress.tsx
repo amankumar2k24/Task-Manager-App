@@ -1,6 +1,11 @@
 import labels from "../labels/labels";
 
-export default function WeeklyProgress({ open, completed }) {
+interface WeeklyProgressProps {
+    open: number;
+    completed: number;
+}
+
+export default function WeeklyProgress({ open, completed }: WeeklyProgressProps) {
     const total = open + completed;
     const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
     return (

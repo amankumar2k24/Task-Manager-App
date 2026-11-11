@@ -1,16 +1,17 @@
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
-const Task = require("./model/task");
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import Task from "./model/task";
+import type { TaskAttrs } from "./model/task";
 
 dotenv.config();
 
-const at = (hour, minute = 0) => {
+const at = (hour: number, minute = 0): Date => {
     const date = new Date();
     date.setHours(hour, minute, 0, 0);
     return date;
 };
 
-const seedTasks = [
+const seedTasks: TaskAttrs[] = [
     {
         title: "Finishing Wireframe",
         description: "Complete the wireframe for the to-do app home screen.",
@@ -45,7 +46,7 @@ const seedTasks = [
     },
 ];
 
-const seed = async () => {
+const seed = async (): Promise<void> => {
     const uri = process.env.MONGO_DB_URI;
     if (!uri) {
         console.log("MONGO_DB_URI is not set - cannot seed");
@@ -63,7 +64,7 @@ const seed = async () => {
     process.exit(0);
 };
 
-seed().catch((error) => {
+seed().catch((error: unknown) => {
     console.log("Seed failed", error);
     process.exit(1);
 });

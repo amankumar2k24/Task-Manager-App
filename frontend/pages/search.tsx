@@ -7,6 +7,7 @@ import TaskSheet from "../src/Component/TaskSheet";
 import EmptyState from "../src/Component/EmptyState";
 import { useTasks } from "../src/hooks/useTasks";
 import labels from "../src/labels/labels";
+import type { Task, TaskInput } from "../src/types/task";
 
 const BackIcon = () => (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#101828" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -19,7 +20,7 @@ export default function Search() {
     const router = useRouter();
     const [query, setQuery] = useState("");
     const [sheetOpen, setSheetOpen] = useState(false);
-    const [editingTask, setEditingTask] = useState(null);
+    const [editingTask, setEditingTask] = useState<Task | null>(null);
     const { items, searchResults, search, clearSearch, editTask, removeTask, toggleTask } = useTasks();
 
     useEffect(() => {
@@ -32,9 +33,16 @@ export default function Search() {
 
     const results = query.trim() ? searchResults : items;
 
-    const openEditSheet = (task) => {
+    const openEditSheet = (task: Task): void => {
         setEditingTask(task);
         setSheetOpen(true);
+    };
+
+    const submitSheet = (payload: TaskInput): void => {
+        if (!editingTask) return;
+        editTask(editingTask.id, payload);
+        setSheetOpen(false);
+        setEditingTask(null);
     };
 
     return (
@@ -71,11 +79,7 @@ export default function Search() {
                     setSheetOpen(false);
                     setEditingTask(null);
                 }}
-                onSubmit={(payload) => {
-                    editTask(editingTask.id, payload);
-                    setSheetOpen(false);
-                    setEditingTask(null);
-                }}
+                onSubmit={submitSheet}
             />
         </AppLayout>
     );

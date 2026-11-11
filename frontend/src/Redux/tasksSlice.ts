@@ -1,38 +1,61 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import TaskApi from "../Api/TaskApi";
 import seedTasks from "../data/seedTasks";
+import type { RootState } from "./store";
+import type { Task, TaskInput, TaskQueryParams, TaskStatus, TaskUpdate, WeekSummary } from "../types/task";
 
-export const fetchTasks = createAsyncThunk("tasks/fetchTasks", async (params = {}) => {
+export type TasksStatus = "idle" | "loading" | "succeeded" | "failed";
+
+export interface TasksState {
+    items: Task[];
+    searchResults: Task[];
+    summary: WeekSummary;
+    status: TasksStatus;
+    error: string | null;
+}
+
+const initialState: TasksState = {
+    items: seedTasks,
+    searchResults: [],
+    summary: { open: 0, completed: 0, total: 0 },
+    status: "idle",
+    error: null,
+};
+
+export const fetchTasks = createAsyncThunk<Task[], TaskQueryParams>("tasks/fetchTasks", async (params: TaskQueryParams = {}) => {
     return TaskApi.getTasks(params);
 });
 
-export const fetchWeekSummary = createAsyncThunk("tasks/fetchWeekSummary", async (weekStart) => {
+export const fetchWeekSummary = createAsyncThunk<WeekSummary, string>("tasks/fetchWeekSummary", async (weekStart: string) => {
     return TaskApi.getWeekSummary(weekStart);
 });
 
-export const createTask = createAsyncThunk("tasks/createTask", async (payload) => {
+export const createTask = createAsyncThunk<Task, TaskInput>("tasks/createTask", async (payload: TaskInput) => {
     try {
         return await TaskApi.createTask(payload);
     } catch (error) {
         const now = new Date().toISOString();
-        return { ...payload, id: `local-${Date.now()}`, createdAt: now, updatedAt: now };
+        return { ...payload, id: `local-${Date.now()}`, status: "In Progress" as const, createdAt: now, updatedAt: now };
     }
 });
 
-export const updateTask = createAsyncThunk("tasks/updateTask", async ({ id, changes }) => {
-    try {
-        return await TaskApi.updateTask(id, changes);
-    } catch (error) {
-        return { id, ...changes };
+export const updateTask = createAsyncThunk<Partial<Task> & { id: string }, { id: string; changes: TaskUpdate }>(
+    "tasks/updateTask",
+    async ({ id, changes }) => {
+        try {
+            return await TaskApi.updateTask(id, changes);
+        } catch (error) {
+            return { id, ...changes };
+        }
     }
-});
+);
 
-export const deleteTask = createAsyncThunk("tasks/deleteTask", async (id) => {
+export const deleteTask = createAsyncThunk<string, string>("tasks/deleteTask", async (id: string) => {
     await TaskApi.deleteTask(id).catch(() => {});
     return id;
 });
 
-export const toggleTaskStatus = createAsyncThunk(
+export const toggleTaskStatus = createAsyncThunk<Partial<Task> & { id: string }, { id: string; status: TaskStatus }>(
     "tasks/toggleTaskStatus",
     async ({ id, status }) => {
         try {
@@ -43,30 +66,27 @@ export const toggleTaskStatus = createAsyncThunk(
     }
 );
 
-export const searchTasks = createAsyncThunk("tasks/searchTasks", async (query, { getState }) => {
-    const trimmed = query.trim();
-    if (!trimmed) return [];
-    try {
-        return await TaskApi.searchTasks(trimmed);
-    } catch (error) {
-        const needle = trimmed.toLowerCase();
-        return getState().tasks.items.filter(
-            (task) =>
-                task.title.toLowerCase().includes(needle) ||
-                (task.description || "").toLowerCase().includes(needle)
-        );
+export const searchTasks = createAsyncThunk<Task[], string, { state: RootState }>(
+    "tasks/searchTasks",
+    async (query: string, { getState }) => {
+        const trimmed = query.trim();
+        if (!trimmed) return [];
+        try {
+            return await TaskApi.searchTasks(trimmed);
+        } catch (error) {
+            const needle = trimmed.toLowerCase();
+            return getState().tasks.items.filter(
+                (task) =>
+                    task.title.toLowerCase().includes(needle) ||
+                    (task.description || "").toLowerCase().includes(needle)
+            );
+        }
     }
-});
+);
 
 const tasksSlice = createSlice({
     name: "tasks",
-    initialState: {
-        items: seedTasks,
-        searchResults: [],
-        summary: { open: 0, completed: 0, total: 0 },
-        status: "idle",
-        error: null,
-    },
+    initialState,
     reducers: {
         clearSearch: (state) => {
             state.searchResults = [];
@@ -84,7 +104,7 @@ const tasksSlice = createSlice({
             })
             .addCase(fetchTasks.rejected, (state, action) => {
                 state.status = "failed";
-                state.error = action.error.message;
+                state.error = action.error.message ?? null;
             })
             .addCase(fetchWeekSummary.fulfilled, (state, action) => {
                 state.summary = action.payload;
@@ -95,7 +115,7 @@ const tasksSlice = createSlice({
             })
             .addCase(createTask.fulfilled, (state, action) => {
                 state.items = [...state.items, action.payload].sort(
-                    (a, b) => new Date(a.dateTime) - new Date(b.dateTime)
+                    (a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime()
                 );
             })
             .addCase(updateTask.fulfilled, (state, action) => {
@@ -109,7 +129,7 @@ const tasksSlice = createSlice({
             })
             .addCase(toggleTaskStatus.fulfilled, (state, action) => {
                 state.items = state.items.map((task) =>
-                    task.id === action.payload.id ? { ...task, status: action.payload.status } : task
+                    task.id === action.payload.id ? { ...task, status: action.payload.status ?? task.status } : task
                 );
             })
             .addCase(searchTasks.fulfilled, (state, action) => {

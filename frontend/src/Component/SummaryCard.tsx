@@ -12,7 +12,14 @@ const CrossIcon = () => (
     </svg>
 );
 
-export default function SummaryCard({ type, count }) {
+export type SummaryCardType = "complete" | "pending";
+
+interface SummaryCardProps {
+    type: SummaryCardType;
+    count: number;
+}
+
+export default function SummaryCard({ type, count }: SummaryCardProps) {
     const complete = type === "complete";
     return (
         <div className={`flex h-[96px] flex-1 flex-col gap-1 rounded-2xl p-3.5 ${complete ? "bg-primaryLight" : "bg-pendingBg"}`}>

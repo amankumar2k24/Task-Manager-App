@@ -17,7 +17,11 @@ const ChevronPattern = () => (
     </svg>
 );
 
-export default function Onboarding({ onGetStarted }) {
+interface OnboardingProps {
+    onGetStarted: () => void;
+}
+
+export default function Onboarding({ onGetStarted }: OnboardingProps) {
     return (
         <div className="flex min-h-[100dvh] flex-col">
             <div className="relative h-[552px] shrink-0 bg-primary">

@@ -1,4 +1,9 @@
-export default function EmptyState({ title, subtitle }) {
+interface EmptyStateProps {
+    title: string;
+    subtitle?: string;
+}
+
+export default function EmptyState({ title, subtitle }: EmptyStateProps) {
     return (
         <div className="flex flex-col items-center px-8 py-14 text-center">
             <span className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-primaryLight">

@@ -14,6 +14,7 @@ import { useWeek } from "../src/hooks/useWeek";
 import { isSameDay, weekStartISO } from "../src/lib/week";
 import { formatDayHeading } from "../src/utils/format";
 import labels from "../src/labels/labels";
+import type { Task, TaskInput } from "../src/types/task";
 
 const ONBOARDED_KEY = "todo-onboarded";
 
@@ -25,9 +26,9 @@ const PlusIcon = () => (
 
 export default function Home() {
     const router = useRouter();
-    const [onboarded, setOnboarded] = useState(null);
+    const [onboarded, setOnboarded] = useState<boolean | null>(null);
     const [sheetOpen, setSheetOpen] = useState(false);
-    const [editingTask, setEditingTask] = useState(null);
+    const [editingTask, setEditingTask] = useState<Task | null>(null);
     const { weekStart, days, selectedDay, selectDay } = useWeek();
     const { items, summary, loadTasks, loadWeekSummary, addTask, editTask, removeTask, toggleTask } = useTasks();
 
@@ -43,17 +44,17 @@ export default function Home() {
 
     const dayTasks = items.filter((task) => isSameDay(new Date(task.dateTime), selectedDay));
 
-    const openCreateSheet = () => {
+    const openCreateSheet = (): void => {
         setEditingTask(null);
         setSheetOpen(true);
     };
 
-    const openEditSheet = (task) => {
+    const openEditSheet = (task: Task): void => {
         setEditingTask(task);
         setSheetOpen(true);
     };
 
-    const submitSheet = (payload) => {
+    const submitSheet = (payload: TaskInput): void => {
         if (editingTask) editTask(editingTask.id, payload);
         else addTask(payload);
         setSheetOpen(false);

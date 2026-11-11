@@ -2,12 +2,12 @@ import { useMemo, useState } from "react";
 import { addDays, startOfWeek } from "../lib/week";
 
 export const useWeek = () => {
-    const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
-    const [selectedDay, setSelectedDay] = useState(() => new Date());
+    const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date()));
+    const [selectedDay, setSelectedDay] = useState<Date>(() => new Date());
 
-    const days = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
+    const days = useMemo<Date[]>(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
 
-    const goToWeek = (monday) => {
+    const goToWeek = (monday: Date): void => {
         setWeekStart(startOfWeek(monday));
         setSelectedDay(startOfWeek(monday));
     };

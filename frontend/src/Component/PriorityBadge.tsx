@@ -1,10 +1,22 @@
-const styles = {
+import type { Priority } from "../types/task";
+
+interface PriorityStyle {
+    bg: string;
+    text: string;
+    dot: string;
+}
+
+const styles: Record<Priority, PriorityStyle> = {
     Low: { bg: "#ECFDF3", text: "#027A48", dot: "#12B76A" },
     Medium: { bg: "#FFFAEB", text: "#B54708", dot: "#F79009" },
     High: { bg: "#FEF3F2", text: "#B42318", dot: "#F04438" },
 };
 
-export default function PriorityBadge({ priority }) {
+interface PriorityBadgeProps {
+    priority: Priority;
+}
+
+export default function PriorityBadge({ priority }: PriorityBadgeProps) {
     const style = styles[priority] || styles.Medium;
     return (
         <span

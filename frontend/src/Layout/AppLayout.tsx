@@ -1,6 +1,11 @@
+import type { ReactNode } from "react";
 import MobileShell from "./MobileShell";
 
-export default function AppLayout({ children }) {
+interface AppLayoutProps {
+    children: ReactNode;
+}
+
+export default function AppLayout({ children }: AppLayoutProps) {
     return (
         <MobileShell>
             <main>{children}</main>

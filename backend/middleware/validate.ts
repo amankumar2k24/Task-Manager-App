@@ -1,8 +1,14 @@
-module.exports = (schema) => (req, res, next) => {
+import type { NextFunction, Request, Response } from "express";
+import type { ObjectSchema } from "joi";
+
+const validate = (schema: ObjectSchema) => (req: Request, res: Response, next: NextFunction): void => {
     const { error, value } = schema.validate(req.body);
     if (error) {
-        return res.status(400).json({ message: "Error from validation", status: false, response: error.details[0].message });
+        res.status(400).json({ message: "Error from validation", status: false, response: error.details[0].message });
+        return;
     }
     req.body = value;
     next();
 };
+
+export default validate;

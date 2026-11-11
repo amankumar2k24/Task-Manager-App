@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import labels from "../labels/labels";
 import { combineDateTime, toDateInputValue, toTimeInputValue } from "../utils/format";
+import type { Priority, Task, TaskInput } from "../types/task";
 
-const priorities = ["Low", "Medium", "High"];
+const priorities: Priority[] = ["Low", "Medium", "High"];
 
 const CloseIcon = () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#667085" strokeWidth="2" strokeLinecap="round">
@@ -30,13 +31,20 @@ const titleInputClass =
 const timeInputClass =
     "h-[52px] w-full rounded-lg border border-line bg-white px-3.5 text-[15px] text-ink outline-none focus:border-primary placeholder:text-[#98A2B3]";
 
-export default function TaskSheet({ open, task, onClose, onSubmit }) {
+interface TaskSheetProps {
+    open: boolean;
+    task: Task | null;
+    onClose: () => void;
+    onSubmit: (payload: TaskInput) => void;
+}
+
+export default function TaskSheet({ open, task, onClose, onSubmit }: TaskSheetProps) {
     const [title, setTitle] = useState("");
     const [date, setDate] = useState("");
     const [startTime, setStartTime] = useState("10:00");
     const [endTime, setEndTime] = useState("11:00");
     const [description, setDescription] = useState("");
-    const [priority, setPriority] = useState("Medium");
+    const [priority, setPriority] = useState<Priority>("Medium");
     const [error, setError] = useState("");
 
     useEffect(() => {
@@ -52,7 +60,7 @@ export default function TaskSheet({ open, task, onClose, onSubmit }) {
 
     useEffect(() => {
         if (!open) return;
-        const onKey = (e) => {
+        const onKey = (e: KeyboardEvent): void => {
             if (e.key === "Escape") onClose();
         };
         window.addEventListener("keydown", onKey);
@@ -61,7 +69,7 @@ export default function TaskSheet({ open, task, onClose, onSubmit }) {
 
     if (!open) return null;
 
-    const submit = () => {
+    const submit = (): void => {
         if (!title.trim()) return setError("Please enter a task title");
         if (!date) return setError("Please pick a date");
         if (!startTime) return setError("Please pick a start time");
