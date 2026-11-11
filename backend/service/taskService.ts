@@ -12,6 +12,12 @@ const ensureDbReady = (): void => {
     }
 };
 
+// A malformed id can never match a task, so answer 404 instead of letting Mongoose's
+// CastError surface as a 500.
+const ensureValidId = (id: string): void => {
+    if (!mongoose.isValidObjectId(id)) throw new AppError(404, responseMessage.taskNotFound);
+};
+
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -60,6 +66,7 @@ export const getWeekSummary = async (weekStart?: string): Promise<WeekSummaryRes
 
 export const getTaskById = async (id: string): Promise<HydratedDocument<TaskAttrs>> => {
     ensureDbReady();
+    ensureValidId(id);
     const task = await Task.findById(id);
     if (!task) throw new AppError(404, responseMessage.taskNotFound);
     return task;
@@ -67,6 +74,7 @@ export const getTaskById = async (id: string): Promise<HydratedDocument<TaskAttr
 
 export const updateTask = async (id: string, changes: TaskUpdateInput): Promise<HydratedDocument<TaskAttrs>> => {
     ensureDbReady();
+    ensureValidId(id);
     const task = await Task.findByIdAndUpdate(id, changes, { new: true, runValidators: true });
     if (!task) throw new AppError(404, responseMessage.taskNotFound);
     return task;
@@ -74,6 +82,7 @@ export const updateTask = async (id: string, changes: TaskUpdateInput): Promise<
 
 export const deleteTask = async (id: string): Promise<HydratedDocument<TaskAttrs>> => {
     ensureDbReady();
+    ensureValidId(id);
     const task = await Task.findByIdAndDelete(id);
     if (!task) throw new AppError(404, responseMessage.taskNotFound);
     return task;
@@ -81,6 +90,7 @@ export const deleteTask = async (id: string): Promise<HydratedDocument<TaskAttrs
 
 export const toggleTaskStatus = async (id: string, status: TaskStatus): Promise<HydratedDocument<TaskAttrs>> => {
     ensureDbReady();
+    ensureValidId(id);
     const task = await Task.findByIdAndUpdate(id, { status }, { new: true });
     if (!task) throw new AppError(404, responseMessage.taskNotFound);
     return task;
