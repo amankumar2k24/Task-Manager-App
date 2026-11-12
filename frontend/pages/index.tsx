@@ -21,7 +21,7 @@ const ONBOARDED_KEY = "todo-onboarded";
 export default function Home() {
     const router = useRouter();
     const [onboarded, setOnboarded] = useState<boolean | null>(null);
-    const { weekStart, days, selectedDay, selectDay } = useWeek();
+    const { weekStart, days, selectedDay, selectDay, nextWeek, prevWeek } = useWeek();
     const { items, status, loadTasks } = useTasks();
     const { openCreate, rowActions, sheets } = useTaskSheets();
 
@@ -57,7 +57,13 @@ export default function Home() {
             <div className="no-scrollbar h-full overflow-y-auto overflow-x-hidden bg-homeBg px-6 max-[375px]:px-4 pt-[37px]">
                 <SearchBar value="" onChange={() => { }} onFocus={() => router.push("/search")} />
                 <div className="mt-3">
-                    <WeekStrip days={days} selectedDay={selectedDay} onSelectDay={selectDay} />
+                    <WeekStrip
+                        days={days}
+                        selectedDay={selectedDay}
+                        onSelectDay={selectDay}
+                        onSwipeLeft={nextWeek}
+                        onSwipeRight={prevWeek}
+                    />
                 </div>
 
                 <button

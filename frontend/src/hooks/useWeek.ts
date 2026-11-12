@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { addDays, startOfWeek } from "../lib/week";
+import { addDays, isInWeek, startOfWeek } from "../lib/week";
 
 export const useWeek = () => {
     const [weekStart, setWeekStart] = useState<Date>(() => startOfWeek(new Date()));
@@ -9,7 +9,7 @@ export const useWeek = () => {
 
     const goToWeek = (monday: Date): void => {
         setWeekStart(startOfWeek(monday));
-        setSelectedDay(startOfWeek(monday));
+        setSelectedDay(isInWeek(new Date(), startOfWeek(monday)) ? new Date() : startOfWeek(monday));
     };
 
     return {
