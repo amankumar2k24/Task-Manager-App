@@ -1,4 +1,4 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice, isAnyOf } from "@reduxjs/toolkit";
 import type { PayloadAction } from "@reduxjs/toolkit";
 import TaskApi from "../Api/TaskApi";
 import { apiErrorMessage } from "../Api/CommonApi";
@@ -12,6 +12,7 @@ export interface TasksState {
     summary: WeekSummary;
     status: TasksStatus;
     searchStatus: TasksStatus;
+    mutations: number;
     error: string | null;
 }
 
@@ -21,6 +22,7 @@ const initialState: TasksState = {
     summary: { open: 0, completed: 0, total: 0 },
     status: "idle",
     searchStatus: "idle",
+    mutations: 0,
     error: null,
 };
 
@@ -169,7 +171,25 @@ const tasksSlice = createSlice({
             .addCase(searchTasks.rejected, (state, action) => {
                 state.searchStatus = "failed";
                 fail(state, action);
-            });
+            })
+            .addMatcher(isAnyOf(createTask.pending, updateTask.pending, deleteTask.pending, toggleTaskStatus.pending), (state) => {
+                state.mutations += 1;
+            })
+            .addMatcher(
+                isAnyOf(
+                    createTask.fulfilled,
+                    createTask.rejected,
+                    updateTask.fulfilled,
+                    updateTask.rejected,
+                    deleteTask.fulfilled,
+                    deleteTask.rejected,
+                    toggleTaskStatus.fulfilled,
+                    toggleTaskStatus.rejected
+                ),
+                (state) => {
+                    state.mutations = Math.max(0, state.mutations - 1);
+                }
+            );
     },
 });
 

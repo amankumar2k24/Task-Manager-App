@@ -118,3 +118,42 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 .overlay-enter {
     animation: fadeIn 0.2s ease-out;
 }
+
+@keyframes loaderChase {
+    from {
+        stroke-dashoffset: 0;
+    }
+
+    to {
+        stroke-dashoffset: -100;
+    }
+}
+
+@keyframes loaderCheck {
+    0% {
+        stroke-dashoffset: 100;
+        opacity: 1;
+    }
+
+    55%,
+    85% {
+        stroke-dashoffset: 0;
+        opacity: 1;
+    }
+
+    100% {
+        stroke-dashoffset: 0;
+        opacity: 0;
+    }
+}
+
+.loader-chase {
+    stroke-dasharray: 28 72;
+    animation: loaderChase 1.2s linear infinite;
+}
+
+.loader-check {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    animation: loaderCheck 1.6s ease-in-out infinite;
+}
