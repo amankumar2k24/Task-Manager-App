@@ -3,20 +3,21 @@ import { X } from "lucide-react";
 import PriorityBadge from "./PriorityBadge";
 import labels from "../labels/labels";
 import { formatDateLong, timeRange } from "../utils/format";
-import type { Task } from "../types/task";
+import type { Task, TaskStatus } from "../types/task";
 
 interface TaskDetailSheetProps {
     task: Task | null;
     onClose: () => void;
     onEdit: (task: Task) => void;
     onDelete: (task: Task) => void;
-    onToggle: (task: Task) => void;
+    onChangeStatus: (task: Task, status: TaskStatus) => void;
 }
 
 const labelClass = "mb-2 block text-[12px] font-medium leading-[18px] text-fieldLabel";
 const valueClass = "text-[14px] font-normal leading-5 text-ink";
+const statuses: TaskStatus[] = ["Pending", "In Progress", "Completed"];
 
-export default function TaskDetailSheet({ task, onClose, onEdit, onDelete, onToggle }: TaskDetailSheetProps) {
+export default function TaskDetailSheet({ task, onClose, onEdit, onDelete, onChangeStatus }: TaskDetailSheetProps) {
     useEffect(() => {
         if (!task) return;
         const onKey = (e: KeyboardEvent): void => {
@@ -61,7 +62,19 @@ export default function TaskDetailSheet({ task, onClose, onEdit, onDelete, onTog
                     <PriorityBadge priority={task.priority} />
 
                     <span className={`${labelClass} mt-6`}>{labels.status}</span>
-                    <p className={valueClass}>{task.status}</p>
+                    <div role="radiogroup" aria-label={labels.status} className="flex gap-2">
+                        {statuses.map((status) => (
+                            <button
+                                key={status}
+                                role="radio"
+                                aria-checked={task.status === status}
+                                onClick={() => onChangeStatus(task, status)}
+                                className={`h-9 flex-1 border text-[12px] font-medium leading-[18px] ${task.status === status ? "border-primary bg-primary text-white" : "border-line text-fieldLabel"}`}
+                            >
+                                {status}
+                            </button>
+                        ))}
+                    </div>
 
                     <span className={`${labelClass} mt-6`}>{labels.description}</span>
                     <p className={`${valueClass} whitespace-pre-wrap break-words ${task.description ? "" : "text-ink/40"}`}>
@@ -69,13 +82,7 @@ export default function TaskDetailSheet({ task, onClose, onEdit, onDelete, onTog
                     </p>
                 </div>
 
-                <div className="mt-[26px] flex shrink-0 gap-3">
-                    <button
-                        onClick={() => onToggle(task)}
-                        className="h-12 flex-1 border border-primary text-[14px] font-medium leading-5 text-primary"
-                    >
-                        {completed ? labels.markInProgress : labels.markCompleted}
-                    </button>
+                <div className="mt-[26px] flex shrink-0">
                     <button
                         onClick={() => onDelete(task)}
                         className="h-12 flex-1 border border-danger text-[14px] font-medium leading-5 text-danger"

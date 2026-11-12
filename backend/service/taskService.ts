@@ -19,7 +19,7 @@ export const getTasks = async (query: TaskListQuery): Promise<HydratedDocument<T
 export const getWeekSummary = async (weekStart?: string): Promise<WeekSummaryResponse> => {
     const filter = weekFilter(weekStart);
     const [open, completed] = await Promise.all([
-        Task.countDocuments({ ...filter, status: "In Progress" }),
+        Task.countDocuments({ ...filter, status: { $ne: "Completed" } }),
         Task.countDocuments({ ...filter, status: "Completed" }),
     ]);
     return { open, completed, total: open + completed };

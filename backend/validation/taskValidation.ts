@@ -7,7 +7,7 @@ export const createTaskSchema = Joi.object<TaskInput>({
     dateTime: Joi.date().iso().required(),
     endDateTime: Joi.date().iso().allow(null),
     priority: Joi.string().valid("Low", "Medium", "High"),
-    status: Joi.string().valid("In Progress", "Completed"),
+    status: Joi.string().valid("Pending", "In Progress", "Completed"),
 });
 
 export const updateTaskSchema = Joi.object<TaskUpdateInput>({
@@ -16,9 +16,9 @@ export const updateTaskSchema = Joi.object<TaskUpdateInput>({
     dateTime: Joi.date().iso(),
     endDateTime: Joi.date().iso().allow(null),
     priority: Joi.string().valid("Low", "Medium", "High"),
-    status: Joi.string().valid("In Progress", "Completed"),
+    status: Joi.string().valid("Pending", "In Progress", "Completed"),
 }).min(1);
 
 export const statusSchema = Joi.object<StatusInput>({
-    status: Joi.string().valid("In Progress", "Completed").required(),
+    status: Joi.string().valid("Pending", "In Progress", "Completed").required(),
 });

@@ -18,7 +18,7 @@ const seedTasks: TaskAttrs[] = [
         dateTime: at(10, 0),
         endDateTime: at(11, 0),
         priority: "Medium",
-        status: "In Progress",
+        status: "Pending",
     },
     {
         title: "Meeting with team",

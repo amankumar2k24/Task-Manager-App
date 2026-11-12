@@ -70,6 +70,47 @@ input[type="time"]::-webkit-calendar-picker-indicator {
     }
 }
 
+/* Week strip: the new week slides in from the side it was swiped towards */
+@keyframes weekSlideNext {
+    from {
+        transform: translateX(40%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes weekSlidePrev {
+    from {
+        transform: translateX(-40%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.week-slide-next {
+    animation: weekSlideNext 0.25s ease-out;
+}
+
+.week-slide-prev {
+    animation: weekSlidePrev 0.25s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .week-slide-next,
+    .week-slide-prev {
+        animation: none;
+    }
+}
+
 .sheet-enter {
     animation: slideUp 0.28s ease-out;
 }

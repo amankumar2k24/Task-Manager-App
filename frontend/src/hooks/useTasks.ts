@@ -5,7 +5,7 @@ import type { Task, TaskInput, TaskQueryParams, TaskStatus, TaskUpdate } from ".
 export const useTasks = () => {
     const dispatch = useAppDispatch();
     const tasks = useAppSelector((state) => state.tasks);
-    const nextStatus = (task: Task): TaskStatus => (task.status === "Completed" ? "In Progress" : "Completed");
+    const nextStatus = (task: Task): TaskStatus => (task.status === "Completed" ? "Pending" : "Completed");
     const succeeded = (result: { meta: { requestStatus: string } }): boolean => result.meta.requestStatus === "fulfilled";
 
     return {
@@ -18,6 +18,8 @@ export const useTasks = () => {
         removeTask: async (id: string): Promise<boolean> => succeeded(await dispatch(deleteTask(id))),
         toggleTask: async (task: Task): Promise<boolean> =>
             succeeded(await dispatch(toggleTaskStatus({ id: task.id, status: nextStatus(task) }))),
+        setTaskStatus: async (task: Task, status: TaskStatus): Promise<boolean> =>
+            succeeded(await dispatch(toggleTaskStatus({ id: task.id, status }))),
         search: (query: string) => dispatch(searchTasks(query)),
         clearSearch: () => dispatch(clearSearch()),
         clearError: () => dispatch(clearError()),

@@ -62,7 +62,7 @@ export default function TaskRow({ task, onToggle, onView, onEdit, onDelete }: Ta
                         onClick={onToggle}
                         role="checkbox"
                         aria-checked={completed}
-                        aria-label={completed ? "Mark as in progress" : "Mark as completed"}
+                        aria-label={completed ? "Mark as pending" : "Mark as completed"}
                         className="flex h-5 w-5 shrink-0 items-center justify-center border border-primary bg-white"
                     >
                         {completed && <Check size={14} strokeWidth={2} color="#4566EC" />}

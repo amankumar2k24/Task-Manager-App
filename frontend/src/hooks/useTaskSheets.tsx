@@ -2,10 +2,10 @@ import { useState } from "react";
 import TaskSheet from "../Component/TaskSheet";
 import TaskDetailSheet from "../Component/TaskDetailSheet";
 import { useTasks } from "./useTasks";
-import type { Task, TaskInput } from "../types/task";
+import type { Task, TaskInput, TaskStatus } from "../types/task";
 
 export const useTaskSheets = () => {
-    const { items, searchResults, addTask, editTask, removeTask, toggleTask } = useTasks();
+    const { items, searchResults, addTask, editTask, removeTask, toggleTask, setTaskStatus } = useTasks();
     const [viewingId, setViewingId] = useState<string | null>(null);
     const [editingTask, setEditingTask] = useState<Task | null>(null);
     const [formOpen, setFormOpen] = useState(false);
@@ -49,9 +49,13 @@ export const useTaskSheets = () => {
         void toggleTask(task);
     };
 
+    const changeStatus = (task: Task, status: TaskStatus): void => {
+        if (task.status !== status) void setTaskStatus(task, status);
+    };
+
     const sheets = (
         <>
-            <TaskDetailSheet task={viewingTask} onClose={closeView} onEdit={openEdit} onDelete={remove} onToggle={toggle} />
+            <TaskDetailSheet task={viewingTask} onClose={closeView} onEdit={openEdit} onDelete={remove} onChangeStatus={changeStatus} />
             <TaskSheet open={formOpen} task={editingTask} defaultDate={defaultDate} onClose={closeForm} onSubmit={submit} />
         </>
     );

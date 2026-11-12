@@ -1,6 +1,6 @@
 export type Priority = "Low" | "Medium" | "High";
 
-export type TaskStatus = "In Progress" | "Completed";
+export type TaskStatus = "Pending" | "In Progress" | "Completed";
 
 export interface TaskInput {
     title: string;

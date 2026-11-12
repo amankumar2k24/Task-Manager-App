@@ -36,8 +36,8 @@ const taskSchema = new Schema<TaskAttrs>({
     },
     status: {
         type: String,
-        enum: ["In Progress", "Completed"],
-        default: "In Progress",
+        enum: ["Pending", "In Progress", "Completed"],
+        default: "Pending",
     },
 }, { timestamps: true, versionKey: false });
 

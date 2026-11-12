@@ -33,8 +33,6 @@ const labels = {
     delete: "Delete",
     status: "Status",
     noDescription: "No description",
-    markCompleted: "Mark completed",
-    markInProgress: "Mark in progress",
     loading: "Loading tasks…",
     cancel: "Cancel",
     ofDone: "done",
