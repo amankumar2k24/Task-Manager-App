@@ -15,7 +15,6 @@ module.exports = {
         searchBorder: "#E6E6E6",
         track: "#DADAFF",
         homeBg: "#FDFDFF",
-        // Values below come from the Figma "To-Do List Mobile app" file
         dayMuted: "#C0C0C0",
         completeTile: "#99ADFF",
         pendingTile: "#FFB1B5",

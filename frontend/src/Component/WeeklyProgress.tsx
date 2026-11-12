@@ -5,7 +5,6 @@ interface WeeklyProgressProps {
     completed: number;
 }
 
-// Figma: title SemiBold 18px black, 14px gap, 24px bar (#DADAFF track, #253C98 fill).
 export default function WeeklyProgress({ open, completed }: WeeklyProgressProps) {
     const total = open + completed;
     const percent = total === 0 ? 0 : Math.round((completed / total) * 100);

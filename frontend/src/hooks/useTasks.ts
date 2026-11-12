@@ -1,19 +1,7 @@
 import { useAppDispatch, useAppSelector } from "../Redux/store";
-import {
-    clearError,
-    clearSearch,
-    createTask,
-    deleteTask,
-    fetchTasks,
-    fetchWeekSummary,
-    searchTasks,
-    toggleTaskStatus,
-    updateTask,
-} from "../Redux/tasksSlice";
+import { clearError, clearSearch, createTask, deleteTask, fetchTasks, fetchWeekSummary, searchTasks, toggleTaskStatus, updateTask, } from "../Redux/tasksSlice";
 import type { Task, TaskInput, TaskQueryParams, TaskStatus, TaskUpdate } from "../types/task";
 
-// Mutations return a promise that resolves to true when the API saved the change and false
-// when it failed (the failure message is shown by the global ErrorBanner).
 export const useTasks = () => {
     const dispatch = useAppDispatch();
     const tasks = useAppSelector((state) => state.tasks);

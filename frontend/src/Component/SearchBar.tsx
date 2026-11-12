@@ -10,7 +10,6 @@ interface SearchBarProps {
     onSubmit?: () => void;
 }
 
-// Figma: 47px tall, 4px radius, #E6E6E6 border, Poppins Light 12px placeholder at 60% black.
 export default function SearchBar({ value, onChange, onFocus, placeholder, autoFocus, onSubmit }: SearchBarProps) {
     return (
         <form

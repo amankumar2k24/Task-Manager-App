@@ -14,9 +14,6 @@ interface TaskRowProps {
     onDelete: () => void;
 }
 
-// Figma: 20px square checkbox with 1px #4566EC border, 12px gap, title Medium 14px #090E23
-// (line-through when done), 24px trash/edit icons 11px apart. Rows sit 64px apart and the
-// divider starts under the title (32px from the left edge).
 export default function TaskRow({ task, onToggle, onView, onEdit, onDelete }: TaskRowProps) {
     const [offset, setOffset] = useState(0);
     const [dragging, setDragging] = useState(false);

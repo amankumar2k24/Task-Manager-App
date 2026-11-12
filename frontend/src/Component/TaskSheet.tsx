@@ -6,8 +6,6 @@ import type { Priority, Task, TaskInput } from "../types/task";
 
 const priorities: Priority[] = ["Low", "Medium", "High"];
 
-// Figma "New Task" frame: labels Medium 12px #717171 with 8px below, fields 40px tall with a
-// 1px #EAEAEA border and 10px inset, field text Regular 14px/20px, 24px between sections.
 const labelClass = "mb-2 block text-[12px] font-medium leading-[18px] text-fieldLabel";
 const fieldClass =
     "h-10 w-full border border-line bg-white px-[10px] text-[14px] font-normal leading-5 text-ink outline-none focus:border-primary placeholder:text-ink/40";
@@ -16,7 +14,6 @@ const iconClass = "pointer-events-none absolute top-1/2 -translate-y-1/2 text-fi
 interface TaskSheetProps {
     open: boolean;
     task: Task | null;
-    // Date pre-filled when creating a task (defaults to today).
     defaultDate?: Date;
     onClose: () => void;
     onSubmit: (payload: TaskInput) => void | Promise<void>;
@@ -71,19 +68,17 @@ export default function TaskSheet({ open, task, defaultDate, onClose, onSubmit }
                 priority,
             });
         } finally {
-            // If the save failed the sheet stays open, so re-enable the button.
             setSaving(false);
         }
     };
 
     return (
-        // absolute (not fixed) so the overlay and sheet stay inside the 390x844 phone shell
         <div className="overlay-enter absolute inset-0 z-50 bg-black/50" onClick={onClose}>
             <div
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="task-sheet-title"
-                className="sheet-enter absolute bottom-0 left-0 flex h-[585px] w-full flex-col bg-white px-6 pb-8 pt-6"
+                className="sheet-enter absolute bottom-0 left-0 flex h-[585px] w-full flex-col bg-white px-6 max-[375px]:px-4 pb-8 pt-6"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex items-center justify-between">

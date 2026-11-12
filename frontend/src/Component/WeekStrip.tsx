@@ -7,8 +7,6 @@ interface WeekStripProps {
     onSelectDay: (day: Date) => void;
 }
 
-// Figma: day name Regular 10px / date Medium 14px, both 22px line height, #C0C0C0.
-// Selected day is a blue block (6px vertical padding) with a 4px dot underneath the date.
 export default function WeekStrip({ days, selectedDay, onSelectDay }: WeekStripProps) {
     return (
         <div className="-mx-[6px] flex items-start justify-between">

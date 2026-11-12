@@ -24,8 +24,6 @@ const initialState: TasksState = {
     error: null,
 };
 
-// Every thunk rejects with a readable message (via rejectWithValue) when the API call fails.
-// Nothing is applied locally on failure, so the UI never shows a change the server didn't save.
 type Rejected = { rejectValue: string };
 
 export const fetchTasks = createAsyncThunk<Task[], TaskQueryParams, Rejected>(
@@ -122,7 +120,6 @@ const tasksSlice = createSlice({
         },
     },
     extraReducers: (builder) => {
-        // Replace a task everywhere it is shown with the server's copy.
         const replace = (state: TasksState, updated: Task): void => {
             const apply = (task: Task): Task => (task.id === updated.id ? { ...task, ...updated } : task);
             state.items = state.items.map(apply).sort(byDate);

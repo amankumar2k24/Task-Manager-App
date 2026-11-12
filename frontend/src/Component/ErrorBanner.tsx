@@ -4,8 +4,6 @@ import { useTasks } from "../hooks/useTasks";
 
 const AUTO_DISMISS_MS = 6000;
 
-// Shows the latest API error from the tasks slice at the top of the phone shell.
-// Sits above the task sheet (z-60) so failures while saving are visible too.
 export default function ErrorBanner() {
     const { error, clearError } = useTasks();
 

@@ -33,8 +33,7 @@ export default function Search() {
 
     return (
         <AppLayout>
-            {/* Figma search frame: back arrow at 31px, search box 29px below it, results 45px below the box */}
-            <div className="no-scrollbar h-full overflow-y-auto overflow-x-hidden bg-white px-6 pb-10 pt-[31px]">
+            <div className="no-scrollbar h-full overflow-y-auto overflow-x-hidden bg-white px-6 max-[375px]:px-4 pb-10 pt-[31px]">
                 <button onClick={() => router.back()} aria-label="Back" className="block">
                     <ArrowLeft size={24} strokeWidth={1.5} color="#090E23" />
                 </button>

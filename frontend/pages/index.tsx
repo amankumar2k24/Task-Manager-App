@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { Plus } from "lucide-react";
 import AppLayout from "../src/Layout/AppLayout";
 import Onboarding from "../src/Component/Onboarding";
 import SearchBar from "../src/Component/SearchBar";
@@ -17,12 +18,6 @@ import labels from "../src/labels/labels";
 
 const ONBOARDED_KEY = "todo-onboarded";
 
-const PlusIcon = () => (
-    <svg width="33" height="33" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
-        <path d="M12 5v14M5 12h14" />
-    </svg>
-);
-
 export default function Home() {
     const router = useRouter();
     const [onboarded, setOnboarded] = useState<boolean | null>(null);
@@ -38,8 +33,6 @@ export default function Home() {
         loadTasks({ weekStart: weekStartParam(weekStart) });
     }, [weekStart]);
 
-    // Derive the weekly counts from the task list itself so the cards and progress bar
-    // update immediately when a task is toggled, added, edited or deleted.
     const weekTasks = items.filter((task) => isInWeek(task.dateTime, weekStart));
     const summary = countByStatus(weekTasks);
     const dayTasks = weekTasks.filter((task) => isSameDay(new Date(task.dateTime), selectedDay));
@@ -61,19 +54,16 @@ export default function Home() {
 
     return (
         <AppLayout>
-            {/* Spacing follows the Figma Home frame: 37px top, 24px sides, 12px/30px section gaps */}
-            <div className="no-scrollbar h-full overflow-y-auto overflow-x-hidden bg-homeBg px-6 pb-[128px] pt-[37px]">
+            <div className="no-scrollbar h-full overflow-y-auto overflow-x-hidden bg-homeBg px-6 max-[375px]:px-4 pt-[37px]">
                 <SearchBar value="" onChange={() => { }} onFocus={() => router.push("/search")} />
                 <div className="mt-3">
                     <WeekStrip days={days} selectedDay={selectedDay} onSelectDay={selectDay} />
                 </div>
 
-                {/* This week's card: open vs completed counts. Tapping it opens the week list,
-                    where the current week's card is expanded to show all of its tasks. */}
                 <button
                     onClick={() => router.push("/weeks")}
                     aria-label={`This week: ${summary.completed} completed, ${summary.open} pending. Show all tasks for this week`}
-                    className="mt-[30px] flex w-full gap-[17px] text-left"
+                    className="mt-[30px] flex w-full gap-[17px] max-[375px]:gap-3 text-left"
                 >
                     <SummaryCard type="complete" count={summary.completed} />
                     <SummaryCard type="pending" count={summary.open} />
@@ -99,15 +89,17 @@ export default function Home() {
                         <EmptyState title={labels.noTasksToday} subtitle="Tap + to add your first task for this day" />
                     )}
                 </div>
-            </div>
 
-            <button
-                onClick={() => openCreate(selectedDay)}
-                aria-label="Add task"
-                className="absolute bottom-7 left-1/2 z-40 flex h-[76px] w-[76px] -translate-x-1/2 items-center justify-center rounded-full bg-primary active:bg-primaryDark"
-            >
-                <PlusIcon />
-            </button>
+                <div className="pointer-events-none sticky bottom-0 z-40 mt-8 flex justify-center pb-7">
+                    <button
+                        onClick={() => openCreate(selectedDay)}
+                        aria-label="Add task"
+                        className="pointer-events-auto flex h-[76px] w-[76px] items-center justify-center rounded-full bg-primary active:bg-primaryDark"
+                    >
+                        <Plus size={33} color="#FFFFFF" strokeWidth={1.5} strokeLinecap="round" aria-hidden="true" />
+                    </button>
+                </div>
+            </div>
 
             {sheets}
         </AppLayout>

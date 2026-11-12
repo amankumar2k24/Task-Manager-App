@@ -23,7 +23,7 @@ export default function Weeks() {
 
     return (
         <AppLayout>
-            <div className="no-scrollbar h-full overflow-y-auto overflow-x-hidden bg-homeBg px-6 pb-10 pt-[31px]">
+            <div className="no-scrollbar h-full overflow-y-auto overflow-x-hidden bg-homeBg px-6 max-[375px]:px-4 pb-10 pt-[31px]">
                 <div className="mb-[30px] flex items-center gap-3">
                     <button onClick={() => router.back()} aria-label="Back">
                         <ArrowLeft size={24} strokeWidth={1.5} color="#090E23" />

@@ -16,7 +16,6 @@ interface TaskDetailSheetProps {
 const labelClass = "mb-2 block text-[12px] font-medium leading-[18px] text-fieldLabel";
 const valueClass = "text-[14px] font-normal leading-5 text-ink";
 
-// Read-only "view" of a task, opened by tapping a task row. Styled like the Add Task sheet.
 export default function TaskDetailSheet({ task, onClose, onEdit, onDelete, onToggle }: TaskDetailSheetProps) {
     useEffect(() => {
         if (!task) return;
@@ -36,7 +35,7 @@ export default function TaskDetailSheet({ task, onClose, onEdit, onDelete, onTog
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="task-detail-title"
-                className="sheet-enter absolute bottom-0 left-0 flex max-h-[585px] w-full flex-col bg-white px-6 pb-8 pt-6"
+                className="sheet-enter absolute bottom-0 left-0 flex max-h-[585px] w-full flex-col bg-white px-6 max-[375px]:px-4 pb-8 pt-6"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="flex items-start justify-between gap-4">

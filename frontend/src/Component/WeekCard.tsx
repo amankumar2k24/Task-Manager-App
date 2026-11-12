@@ -1,27 +1,8 @@
 import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import TaskRow from "./TaskRow";
 import { countByStatus, weekLabel } from "../lib/week";
 import type { Task } from "../types/task";
-
-interface ChevronIconProps {
-    open: boolean;
-}
-
-const ChevronIcon = ({ open }: ChevronIconProps) => (
-    <svg
-        width="18"
-        height="18"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="#667085"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}
-    >
-        <path d="m6 9 6 6 6-6" />
-    </svg>
-);
 
 interface TaskRowActions {
     onView: () => void;
@@ -53,7 +34,13 @@ export default function WeekCard({ weekStart, tasks, defaultExpanded, rowActions
                         {open} open · {completed} completed
                     </span>
                 </span>
-                <ChevronIcon open={expanded} />
+                <ChevronDown
+                    size={18}
+                    color="#667085"
+                    strokeWidth={2}
+                    aria-hidden="true"
+                    className={`transition-transform duration-200 ${expanded ? "rotate-180" : ""}`}
+                />
             </button>
             {expanded && (
                 <div className="border-t border-line px-4 pb-2">

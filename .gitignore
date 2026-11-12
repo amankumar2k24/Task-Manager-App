@@ -8,5 +8,3 @@ out/
 *.log
 *.tsbuildinfo
 .DS_Store
-# Local Kiro editor settings (MCP servers etc.)
-.kiro/settings/
